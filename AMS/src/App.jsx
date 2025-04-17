@@ -1,35 +1,20 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import hiba from './assets/hiba.jpg' 
-import './App.css'
+import React from 'react'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="" target="_blank">
-        <img src={hiba} style={{ width: '150px', height: 'auto' }} alt="hiba" />
-        </a>
-      </div>
-      <h1>HELLLLOOOOO MRRRRR FAAAAJJJAARRRRR HAYYYAATTTTT</h1>
-      <p1>
-        how do u do?
-      </p1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+  <div className="bg-white p-10 rounded-2xl shadow-xl text-center space-y-4">
+  <h1 className="text-3xl font-extrabold text-gray-800">
+    🚀 Tailwind Test Card
+  </h1>
+  <p className="text-gray-600">
+    If you can see this styled card with a gradient background, Tailwind is working!
+  </p>
+  <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300">
+    Click Me
+  </button>
+</div>
+</div>
   )
 }
 
