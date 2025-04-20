@@ -5,24 +5,24 @@ import PrimaryButton from '../components/PrimaryButton';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 
-const LoginPage = ({ navigation }) => {
+const AdminLoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    console.log("Login button pressed");
+  const handleAdminLogin = async () => {
+    console.log("Admin login button pressed");
 
     if (!email || !password) {
-      alert("Please enter both Email/Username and Password.");
+      alert("Please enter both Email and Password.");
       return;
     }
 
-    console.log("Sending login request...");
+    console.log("Sending admin login request...");
     console.log("Email:", email);
     console.log("Password:", password);
 
     try {
-      const response = await axios.post('http://192.168.1.7:3001/user-login', {
+      const response = await axios.post('http://192.168.1.7:3001/admin-login', {
         email,
         password
       });
@@ -33,19 +33,17 @@ const LoginPage = ({ navigation }) => {
 
       if (typeof res === 'string') {
         if (res.toLowerCase().includes('success')) {
-          alert("Login Successful!");
-          navigation.navigate('UserHome'); 
+          alert("Admin Login Successful!");
+          navigation.navigate('AdminDashboard'); 
         } else {
           alert(res); 
         }
-      } else if (res?.status === 'error') {
-        alert(res.message || "Login failed.");
       } else {
         alert("Unexpected response from server.");
       }
 
     } catch (error) {
-      console.error("Login Error:", error);
+      console.error("Admin Login Error:", error);
 
       if (error.response) {
         console.log("Error Response Data:", error.response.data);
@@ -63,20 +61,12 @@ const LoginPage = ({ navigation }) => {
     navigation.navigate('ForgotPassword');
   };
 
-  const handleSignupRedirect = () => {
-    navigation.navigate('Signup');
-  };
-
-  const handleAdminLogin = () => {
-    navigation.navigate('AdminLogin'); 
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>User Login</Text>
+      <Text style={styles.title}>Admin Login</Text>
 
       <InputField 
-        placeholder="Enter Email / Username" 
+        placeholder="Enter Admin Email" 
         iconName="envelope" 
         value={email} 
         onChangeText={setEmail} 
@@ -93,15 +83,7 @@ const LoginPage = ({ navigation }) => {
         <Text style={styles.transparentButtonText}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      <PrimaryButton label="Login" onPress={handleLogin} />
-
-      <TouchableOpacity onPress={handleSignupRedirect}>
-        <Text style={styles.link}>New User? <Text style={styles.bold}>Sign up</Text></Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleAdminLogin}>
-        <Text style={styles.link}><FontAwesome name="shield" /> Admin Login</Text>
-      </TouchableOpacity>
+      <PrimaryButton label="Login" onPress={handleAdminLogin} />
     </View>
   );
 };
@@ -120,14 +102,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  link: {
-    textAlign: 'center',
-    marginTop: 10,
-    color: '#333',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
   transparentButton: {
     backgroundColor: 'transparent',
     padding: 10,
@@ -143,4 +117,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginPage;
+export default AdminLoginPage;
