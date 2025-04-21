@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
-import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
 
 const AdminLoginPage = ({ navigation }) => {
@@ -22,7 +21,7 @@ const AdminLoginPage = ({ navigation }) => {
     console.log("Password:", password);
 
     try {
-      const response = await axios.post('http://192.168.1.7:3001/admin-login', {
+      const response = await axios.post('http://192.168.1.9:3001/admin-login', {
         email,
         password
       });
@@ -57,10 +56,6 @@ const AdminLoginPage = ({ navigation }) => {
     }
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Admin Login</Text>
@@ -78,10 +73,6 @@ const AdminLoginPage = ({ navigation }) => {
         value={password} 
         onChangeText={setPassword} 
       />
-
-      <TouchableOpacity onPress={handleForgotPassword} style={styles.transparentButton}>
-        <Text style={styles.transparentButtonText}>Forgot Password?</Text>
-      </TouchableOpacity>
 
       <PrimaryButton label="Login" onPress={handleAdminLogin} />
     </View>
@@ -101,19 +92,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontWeight: 'bold',
     color: '#000',
-  },
-  transparentButton: {
-    backgroundColor: 'transparent',
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#000',
-    marginVertical: 10,
-  },
-  transparentButtonText: {
-    textAlign: 'center',
-    color: '#333',
-    fontWeight: '500',
   },
 });
 

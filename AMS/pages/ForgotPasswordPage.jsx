@@ -6,55 +6,69 @@ import axios from 'axios';
 
 const ForgotPasswordPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');  // New state for password
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handlePasswordReset = async () => {
-    if (!email || !newPassword) {
-      Alert.alert('Error', 'Please enter both email and new password.');
+    if (!email || !newPassword || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-  
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match.');
+      return;
+    }
+
     try {
-      const response = await axios.post('http://192.168.1.7:3001/reset-user-password', {
+      const response = await axios.post('http://192.168.1.9:3001/reset-user-password', {
         email,
         newPassword,
       });
-  
-      console.log("Response from backend:", response.data); // Log the full response
-  
+
+      console.log("Response from backend:", response.data);
+
       const res = response.data;
 
-      if (res.Status === "success") {
+      if (res.status === "success") {
         Alert.alert('Success', 'Password updated successfully.');
         navigation.navigate('Login');
       } else {
-        Alert.alert('Error', res.Status || 'Something went wrong.');
+        Alert.alert('Error', res.message || 'Something went wrong.');
       }
     } catch (error) {
-      console.error('Error during password reset:', error); 
+      console.error('Error during password reset:', error);
       Alert.alert('Error', `Failed to reset password. Details: ${error.message}`);
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Forgot Password</Text>
       <Text style={styles.subtitle}>
-        Enter your email address and new password.
+        Enter your email, new password, and confirm it.
       </Text>
 
       <InputField
-        placeholder="Enter your Email/Username"
+        placeholder="Enter your Email"
         iconName="envelope"
         value={email}
         onChangeText={setEmail}
       />
 
       <InputField
-        placeholder="Enter your New Password"
+        placeholder="Enter New Password"
         iconName="lock"
         value={newPassword}
         onChangeText={setNewPassword}
+        secureTextEntry={true}
+      />
+
+      <InputField
+        placeholder="Confirm New Password"
+        iconName="lock"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
         secureTextEntry={true}
       />
 

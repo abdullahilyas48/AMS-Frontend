@@ -6,6 +6,10 @@ import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UserHomePage from './pages/UserHomePage';
 import AdminLoginPage from './pages/AdminLoginPage';
+import RidePage from './pages/RidePage';
+import HotelPage from './pages/HotelPage';
+import ParkingPage from './pages/ParkingPage';
+import VIPPage from './pages/VIPPage';
 import { StatusBar } from 'expo-status-bar';
 
 const Stack = createNativeStackNavigator();
@@ -20,6 +24,10 @@ export default function App() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordPage} />
         <Stack.Screen name="UserHome" component={UserHomePage} />
         <Stack.Screen name="AdminLogin" component={AdminLoginPage} />
+        <Stack.Screen name="RidePage" component={RidePage} />
+        <Stack.Screen name="HotelPage" component={HotelPage} />
+        <Stack.Screen name="ParkingPage" component={ParkingPage} />
+        <Stack.Screen name="VIPPage" component={VIPPage} />
       </Stack.Navigator>
     </NavigationContainer>
   );

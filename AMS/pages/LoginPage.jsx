@@ -11,42 +11,38 @@ const LoginPage = ({ navigation }) => {
 
   const handleLogin = async () => {
     console.log("Login button pressed");
-
+  
     if (!email || !password) {
       alert("Please enter both Email/Username and Password.");
       return;
     }
-
+  
     console.log("Sending login request...");
     console.log("Email:", email);
     console.log("Password:", password);
-
+  
     try {
-      const response = await axios.post('http://192.168.1.7:3001/user-login', {
+      const response = await axios.post('http://192.168.1.9:3001/user-login', {
         email,
         password
       });
-
+  
       console.log("Response Data:", response.data);
-
+  
       const res = response.data;
-
-      if (typeof res === 'string') {
-        if (res.toLowerCase().includes('success')) {
-          alert("Login Successful!");
-          navigation.navigate('UserHome'); 
-        } else {
-          alert(res); 
-        }
+  
+      if (res?.status === 'success') {
+        alert(res.message || "Login Successful!");
+        navigation.navigate('UserHome');
       } else if (res?.status === 'error') {
         alert(res.message || "Login failed.");
       } else {
         alert("Unexpected response from server.");
       }
-
+  
     } catch (error) {
       console.error("Login Error:", error);
-
+  
       if (error.response) {
         console.log("Error Response Data:", error.response.data);
       } else if (error.request) {
@@ -54,11 +50,11 @@ const LoginPage = ({ navigation }) => {
       } else {
         console.log("Error setting up the request:", error.message);
       }
-
+  
       alert("Server error. Please check your connection and try again.");
     }
   };
-
+  
   const handleForgotPassword = () => {
     navigation.navigate('ForgotPassword');
   };

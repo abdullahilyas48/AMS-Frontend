@@ -40,7 +40,7 @@ const SignupPage = ({ navigation }) => {
     }
   
     try {
-      const response = await axios.post('http://192.168.1.7:3001/register', {
+      const response = await axios.post('http://192.168.1.9:3001/register', {
         name,
         email: trimmedEmail,
         password: trimmedPassword,
