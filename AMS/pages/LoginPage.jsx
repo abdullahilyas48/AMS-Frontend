@@ -4,57 +4,61 @@ import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
+import useAuth from '../hooks/useAuth'; 
 
 const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login, isLoading: isAuthLoading } = useAuth();
 
   const handleLogin = async () => {
-    console.log("Login button pressed");
-  
-    if (!email || !password) {
-      alert("Please enter both Email/Username and Password.");
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Please enter both Email and Password.");
       return;
     }
-  
-    console.log("Sending login request...");
-    console.log("Email:", email);
-    console.log("Password:", password);
-  
+
     try {
-      const response = await axios.post('http://192.168.1.9:3001/user-login', {
-        email,
-        password
+      const response = await axios.post(
+        'http://192.168.1.9:7798/user-login',
+        { 
+          email: email.trim(), 
+          password: password.trim() 
+        },
+        { 
+          timeout: 10000,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("Login response:", response.data);
+      await login(
+        response.data.token,
+        response.data.user || { email: email.trim() },
+        60 * 60 * 1000 
+      );
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'UserHome' }],
       });
-  
-      console.log("Response Data:", response.data);
-  
-      const res = response.data;
-  
-      if (res?.status === 'success') {
-        alert(res.message || "Login Successful!");
-        navigation.navigate('UserHome');
-      } else if (res?.status === 'error') {
-        alert(res.message || "Login failed.");
-      } else {
-        alert("Unexpected response from server.");
-      }
-  
     } catch (error) {
       console.error("Login Error:", error);
-  
+      
+      let errorMessage = "Login failed. Please try again.";
       if (error.response) {
-        console.log("Error Response Data:", error.response.data);
-      } else if (error.request) {
-        console.log("No response received from server:", error.request);
-      } else {
-        console.log("Error setting up the request:", error.message);
+        errorMessage = error.response.data.message || 
+                      error.response.data.error || 
+                      errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
-  
-      alert("Server error. Please check your connection and try again.");
+      
+      Alert.alert("Login Failed", errorMessage);
     }
   };
-  
+
   const handleForgotPassword = () => {
     navigation.navigate('ForgotPassword');
   };
@@ -64,7 +68,7 @@ const LoginPage = ({ navigation }) => {
   };
 
   const handleAdminLogin = () => {
-    navigation.navigate('AdminLogin'); 
+    navigation.navigate('AdminLogin');
   };
 
   return (
@@ -72,32 +76,42 @@ const LoginPage = ({ navigation }) => {
       <Text style={styles.title}>User Login</Text>
 
       <InputField 
-        placeholder="Enter Email / Username" 
+        placeholder="Enter Email" 
         iconName="envelope" 
         value={email} 
-        onChangeText={setEmail} 
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
+      
       <InputField 
         placeholder="Enter Password" 
         iconName="lock" 
         secureTextEntry 
         value={password} 
-        onChangeText={setPassword} 
+        onChangeText={setPassword}
       />
 
       <TouchableOpacity onPress={handleForgotPassword} style={styles.transparentButton}>
         <Text style={styles.transparentButtonText}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      <PrimaryButton label="Login" onPress={handleLogin} />
+      <PrimaryButton 
+        label={isAuthLoading ? "Logging in..." : "Login"} 
+        onPress={handleLogin} 
+        disabled={isAuthLoading}
+      />
 
-      <TouchableOpacity onPress={handleSignupRedirect}>
-        <Text style={styles.link}>New User? <Text style={styles.bold}>Sign up</Text></Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleAdminLogin}>
-        <Text style={styles.link}><FontAwesome name="shield" /> Admin Login</Text>
-      </TouchableOpacity>
+      <View style={styles.linksContainer}>
+        <TouchableOpacity onPress={handleSignupRedirect}>
+          <Text style={styles.link}>New User? <Text style={styles.bold}>Sign up</Text></Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity onPress={handleAdminLogin} style={styles.adminButton}>
+          <FontAwesome name="shield" size={16} color="#333" />
+          <Text style={styles.adminText}> Admin Login</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -116,26 +130,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
+  linksContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
   link: {
     textAlign: 'center',
-    marginTop: 10,
+    marginVertical: 5,
     color: '#333',
   },
   bold: {
     fontWeight: 'bold',
   },
   transparentButton: {
-    backgroundColor: 'transparent',
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#000',
-    marginVertical: 10,
+    alignSelf: 'flex-end',
+    marginBottom: 15,
   },
   transparentButtonText: {
-    textAlign: 'center',
     color: '#333',
-    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  adminText: {
+    color: '#333',
+    marginLeft: 5,
   },
 });
 

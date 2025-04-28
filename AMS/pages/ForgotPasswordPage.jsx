@@ -14,34 +14,34 @@ const ForgotPasswordPage = ({ navigation }) => {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
+  
     if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
-
+  
     try {
-      const response = await axios.post('http://192.168.1.9:3001/reset-user-password', {
+      const response = await axios.post('http://192.168.1.9:7798/reset-user-password', {
         email,
         newPassword,
+        confirmPassword,
       });
-
+  
       console.log("Response from backend:", response.data);
-
+  
       const res = response.data;
-
-      if (res.status === "success") {
+      if (res.Status === "Password updated successfully") {
         Alert.alert('Success', 'Password updated successfully.');
         navigation.navigate('Login');
       } else {
-        Alert.alert('Error', res.message || 'Something went wrong.');
+        Alert.alert('Error', res.Error || 'Something went wrong.');
       }
     } catch (error) {
       console.error('Error during password reset:', error);
       Alert.alert('Error', `Failed to reset password. Details: ${error.message}`);
     }
   };
-
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Forgot Password</Text>
