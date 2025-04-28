@@ -38,7 +38,7 @@ const SignupPage = ({ navigation }) => {
     }
 
     try {
-        const response = await axios.post('http://192.168.1.9:7798/register-user', {
+        const response = await axios.post('http://192.168.100.18:7798/register-user', {
             name,
             email: trimmedEmail,
             password: trimmedPassword,

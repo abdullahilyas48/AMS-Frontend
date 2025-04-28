@@ -19,7 +19,7 @@ const LoginPage = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        'http://192.168.1.9:7798/user-login',
+        'http://192.168.100.18:7798/user-login',
         { 
           email: email.trim(), 
           password: password.trim() 
