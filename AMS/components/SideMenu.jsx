@@ -7,7 +7,7 @@ export default function SideMenu() {
   const navigation = useNavigation();
 
   const menuItems = [
-    { title: 'User Profile', screen: 'ProfilePage' },
+    { title: 'User Profile', screen: 'UserProfile' },
     { title: 'Reschedule Flight', screen: 'RescheduleFlight' },
     { title: 'Smart Parking', screen: 'SmartParking' }, // Added Smart Parking here
     { title: 'Check Flight Status', screen: 'FlightStatus' },

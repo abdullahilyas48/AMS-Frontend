@@ -20,7 +20,7 @@ const BookHotelRoom = () => {
   const fetchRooms = async () => {
     if (selectedDate) {
       try {
-        const response = await axios.get(`http://192.168.100.18:7798/hotel-rooms?maxPrice=${priceRange[1]}&minPrice=${priceRange[0]}`);
+        const response = await axios.get(`http://192.168.1.113:7798/hotel-rooms?maxPrice=${priceRange[1]}&minPrice=${priceRange[0]}`);
         setRoomOptions(response.data);
       } catch (error) {
         console.error('Error fetching rooms:', error);

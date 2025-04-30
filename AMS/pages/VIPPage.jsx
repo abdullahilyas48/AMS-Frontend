@@ -19,7 +19,7 @@ const BookLounge = ({ navigation }) => {
   // Fetch available lounges
   const fetchLounges = async () => {
     try {
-      const response = await axios.get('http://192.168.100.18:7798/lounges');
+      const response = await axios.get('http://192.168.1.113:7798/lounges');
       setLoungeOptions(response.data);
     } catch (error) {
       console.error('Error fetching lounges:', error);
