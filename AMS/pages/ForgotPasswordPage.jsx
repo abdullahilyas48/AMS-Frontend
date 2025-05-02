@@ -21,7 +21,7 @@ const ForgotPasswordPage = ({ navigation }) => {
     }
   
     try {
-      const response = await axios.post('http://192.168.1.113:7798/reset-user-password', {
+      const response = await axios.post('http://192.168.1.7:7798/reset-user-password', {
         email,
         newPassword,
         confirmPassword,

@@ -1,133 +1,142 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import DateSelector from '../components/DateSelector';
-import TimeSelector from '../components/TimeSelector'; // Create TimeSelector for time input
-import PrimaryButton from '../components/PrimaryButton';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  Pressable,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import axios from 'axios';
+import useAuth from '../hooks/useAuth';
+import TimeSelector from '../components/TimeSelector';
+import DateSelector from '../components/DateSelector';
+import PrimaryButton from '../components/PrimaryButton';
 
-const BookLounge = ({ navigation }) => {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [loungeName, setLoungeName] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [loungeOptions, setLoungeOptions] = useState([]);
-  const [loungeId, setLoungeId] = useState(null);
-
-  const userId = '6635f9b7e7c6e62cd7e02ab0'; // <-- Replace with the REAL logged-in userId
-
-  // Fetch available lounges
-  const fetchLounges = async () => {
-    try {
-      const response = await axios.get('http://192.168.1.113:7798/lounges');
-      setLoungeOptions(response.data);
-    } catch (error) {
-      console.error('Error fetching lounges:', error);
-      Alert.alert('Error', 'Unable to fetch available lounges.');
-    }
-  };
+const BookLounge = () => {
+  const { userData, token } = useAuth();
+  const [lounges, setLounges] = useState([]);
+  const [selectedLounge, setSelectedLounge] = useState('');
+  const [bookingDate, setBookingDate] = useState(null);
+  const [bookingTime, setBookingTime] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
   useEffect(() => {
+    const fetchLounges = async () => {
+      try {
+        const response = await axios.get('http://192.168.100.18:7798/lounges', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLounges(response.data);
+      } catch (error) {
+        console.error('Error fetching lounges:', error);
+        Alert.alert('Error', 'Failed to load lounges');
+      }
+    };
     fetchLounges();
-  }, []);
+  }, [token]);
 
   const handleBooking = async () => {
-    if (!selectedDate || !selectedTime || !loungeId) {
-      alert('Please fill all the fields before submitting!');
+    if (!selectedLounge || !bookingDate || !bookingTime) {
+      Alert.alert('Error', 'Please fill in all the fields');
       return;
     }
 
-    const bookingData = {
-      userId,
-      loungeId,
-      date: selectedDate,
-      time: selectedTime,
-    };
-
+    setLoading(true);
     try {
-      const response = await axios.post('http://192.168.100.18:7798/book-lounge', bookingData);
-      alert('Lounge booked successfully!\n' + JSON.stringify(response.data, null, 2));
+      await axios.post(
+        'http://192.168.100.18:7798/book-lounge',
+        {
+          userId: userData.id,
+          loungeId: selectedLounge,
+          date: bookingDate.toISOString().split('T')[0],
+          time: bookingTime,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Alert.alert('Success', 'Lounge booked successfully');
     } catch (error) {
-      console.error('Booking failed:', error.response ? error.response.data : error.message);
-      Alert.alert('Booking Failed', 'Please try again later.');
+      console.error('Booking failed:', error);
+      Alert.alert('Error', 'Failed to book the lounge');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const selectLounge = (lounge) => {
-    setLoungeName(lounge.name);
-    setLoungeId(lounge._id);
-    setModalVisible(false);
-  };
-
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
+    <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Book a Lounge</Text>
 
-      <Text style={styles.title}>Book a Lounge</Text>
+        <Text style={styles.inputHeading}>Choose a Lounge</Text>
+        <TouchableOpacity style={styles.inputField} onPress={() => setIsDropdownVisible(true)}>
+          <Text style={styles.inputText}>
+            {selectedLounge
+              ? lounges.find((l) => l._id === selectedLounge)?.name
+              : 'Select Lounge'}
+          </Text>
+        </TouchableOpacity>
 
-      <DateSelector
-        label="Select Date"
-        date={selectedDate}
-        onDateChange={setSelectedDate}
-      />
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isDropdownVisible}
+          onRequestClose={() => setIsDropdownVisible(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setIsDropdownVisible(false)}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.modalContainer}>
+                  <FlatList
+                    data={lounges}
+                    keyExtractor={(item) => item._id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.modalItem}
+                        onPress={() => {
+                          setSelectedLounge(item._id);
+                          setIsDropdownVisible(false);
+                        }}
+                      >
+                        <Text style={styles.modalText}>{item.name}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
 
-      {/* Time Selection */}
-      <TimeSelector
-        label="Select Time"
-        time={selectedTime}
-        onTimeChange={setSelectedTime}
-      />
+        <DateSelector label="Booking Date" date={bookingDate} onDateChange={setBookingDate} />
+        <TimeSelector label="Booking Time" time={bookingTime} onTimeChange={setBookingTime} />
 
-      {/* Lounge Selection */}
-      <Text style={styles.inputHeading}>Choose your Lounge</Text>
-      <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.inputField}>
-        <Text style={styles.inputText}>
-          {loungeName ? loungeName : 'Select Lounge'}
-        </Text>
-        <Ionicons name="restaurant" size={20} color="#888" />
-      </TouchableOpacity>
-
-      {/* Modal for Lounge Options */}
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <FlatList
-              data={loungeOptions}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => selectLounge(item)} style={styles.modalItem}>
-                  <Text style={styles.modalText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      <PrimaryButton label="Book Now" onPress={handleBooking} />
-    </View>
+        <PrimaryButton
+          label={loading ? 'Booking...' : 'Book Lounge'}
+          onPress={handleBooking}
+        />
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: { flexGrow: 1, backgroundColor: '#E5D4ED' },
+  contentContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 40 },
   container: {
-    flex: 1,
-    backgroundColor: '#D8BFE8',
-    justifyContent: 'center',
     padding: 20,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 10,
-    padding: 10,
+    backgroundColor: '#F4E8FF',
+    margin: 20,
+    borderRadius: 15,
+    elevation: 4,
+    width: '90%',
+
+  
   },
   title: {
     fontSize: 24,
@@ -138,46 +147,46 @@ const styles = StyleSheet.create({
   },
   inputHeading: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    marginBottom: 8,
+    marginTop: 10,
     color: '#000',
-    marginBottom: 10,
-    marginTop: 15,
   },
   inputField: {
+    backgroundColor: '#E0D3F5',
+    borderRadius: 8,
+    height: 45,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#E9D5FF',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#d1c1e0',
-    marginBottom: 20,
   },
   inputText: {
-    fontSize: 16,
-    color: '#888',
+    color: '#000',
   },
   modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContainer: {
-    backgroundColor: '#D8BFE8',
-    width: 300,
-    borderRadius: 5,
-    paddingVertical: 10,
+    backgroundColor: '#E0D3F5',
+    borderRadius: 10,
+    width: '80%',
+    maxHeight: 250,
+    padding: 15,
   },
   modalItem: {
-    padding: 15,
+    paddingVertical: 10,
+    borderBottomColor: '#eee',
     borderBottomWidth: 1,
-    borderColor: '#ddd',
   },
   modalText: {
-    fontSize: 18,
     color: '#000',
   },
 });
