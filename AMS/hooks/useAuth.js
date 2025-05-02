@@ -48,72 +48,111 @@ const useAuth = () => {
   // 🔧 Fetch user details from backend if needed
   const fetchUserDetails = async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
-      console.log("JWT token:", token);
-  
-      if (!token) {
-        throw new Error('No token found');
-      }
-  
-      const response = await fetch('http://192.168.1.113:7798/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-  
-      if (!response.ok) throw new Error('Failed to fetch user data');
-  
-      const data = await response.json();
-      console.log("Fetched user data:", data);
-  
-      // ✅ Update authState safely
-      setAuthState(prev => ({ ...prev, userData: data }));
-  
-      return data;
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) throw new Error('No token found');
+
+        const response = await fetch('http://192.168.1.7:7798/me', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch user data');
+
+        const data = await response.json();
+        
+        // Get the existing user data (with _id from token)
+        const existingData = JSON.parse(await AsyncStorage.getItem('userData') || '{}');
+        
+        // Merge the responses, preserving the _id
+        const mergedData = {
+            ...data,
+            _id: existingData._id // Keep the ID from token
+        };
+
+        await AsyncStorage.setItem('userData', JSON.stringify(mergedData));
+        
+        setAuthState(prev => ({
+            ...prev,
+            userData: mergedData,
+            isAuthenticated: true
+        }));
+
+        return mergedData;
     } catch (error) {
-      console.error('Fetch user details failed:', error);
-      return null;
+        console.error('Fetch user details failed:', error);
+        throw error; // Rethrow to be handled by caller
     }
-  };
+};
   
   
   
 
   // 🔐 Login function
-  const login = async (userToken, _, expiryOffset = 60 * 60 * 1000) => {
-    try {
+ // In your useAuth.js
+// In your useAuth.js
+const login = async (userToken, _, expiryOffset = 60 * 60 * 1000) => {
+  try {
       const decoded = jwtDecode(userToken);
       console.log('JWT decoded:', decoded);
-  
-      const userData = {
-        name: decoded.name,
-        email: decoded.email,
+
+      // Create user data from token with priority to the decoded userId
+      const userFromToken = {
+          _id: decoded.userId || decoded._id || decoded.sub, // Use userId from token first
+          email: decoded.email,
+          name: decoded.name || 'User' // Default name if not provided
       };
-  
+
       const expiryTime = Date.now() + expiryOffset;
-  
+
+      // Store token and user data immediately
       await AsyncStorage.multiSet([
-        ['userToken', userToken],
-        ['userData', JSON.stringify(userData)],
-        ['tokenExpiry', expiryTime.toString()]
+          ['userToken', userToken],
+          ['tokenExpiry', expiryTime.toString()],
+          ['userData', JSON.stringify(userFromToken)] // Store the token-derived data
       ]);
-  
-      setAuthState({
-        isAuthenticated: true,
-        token: userToken,
-        userData,
-        isLoading: false
-      });
-  
-      // Optionally, call fetchUserDetails to make sure user data is updated from the server
-      await fetchUserDetails();  // Make sure user details are fetched after login
-    } catch (error) {
+
+      // Try to fetch additional user data from server
+      let fullUserData;
+      try {
+          fullUserData = await fetchUserDetails();
+          console.log('Fetched user data:', fullUserData);
+          
+          // Merge the server data with token data (preserve the _id from token)
+          const mergedUserData = {
+              ...userFromToken,
+              ...fullUserData,
+              _id: userFromToken._id // Always keep the _id from token
+          };
+          
+          await AsyncStorage.setItem('userData', JSON.stringify(mergedUserData));
+          
+          setAuthState({
+              isAuthenticated: true,
+              token: userToken,
+              userData: mergedUserData,
+              isLoading: false
+          });
+          
+          return mergedUserData;
+      } catch (fetchError) {
+          console.log('Using token data as fallback', fetchError);
+          // If fetch fails, use the token data
+          setAuthState({
+              isAuthenticated: true,
+              token: userToken,
+              userData: userFromToken,
+              isLoading: false
+          });
+          return userFromToken;
+      }
+  } catch (error) {
       console.error('Login error:', error);
       throw error;
-    }
-  };
+  }
+};
   
   
 

@@ -9,11 +9,24 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UserHomePage from './pages/UserHomePage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import StaffDashboard from './pages/StaffDashboard';
+import StaffSchedule from './pages/StaffSchedule';
+import DutyAssignment from './pages/DutyAssignment';
+import FlightInformation from './pages/FlightInformation';
+import PassengerDetails from './pages/PassengerDetails';
 import RidePage from './pages/RidePage';
 import HotelPage from './pages/HotelPage';
 import VIPPage from './pages/VIPPage';
 import BookFlightPage from './pages/BookFlightPage';
+import RescheduleFlight from './pages/RescheduleFlight';
+import CurrencyConverter from './pages/CurrencyConverter'
+import CancelFlight from './pages/CancelFlight'
 import UserProfilePage from './pages/UserProfilePage';
+import SmartParking from './pages/SmartParking';
+import ParkingReservation from './pages/ParkingReservation';
+import TrackLuggagePage from './pages/TrackLuggagePage';
+import TrackFlightStatusPage from './pages/TrackFlightStatusPage';
+import CancelBookings from './pages/CancelBookings'
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -44,12 +57,24 @@ export default function App() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordPage} />
         <Stack.Screen name="AdminLogin" component={AdminLoginPage} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboardPage} />
+        <Stack.Screen name="StaffDashboard" component={StaffDashboard} />
+        <Stack.Screen name="DutyAssignment" component={DutyAssignment} />
+        <Stack.Screen name="StaffSchedule" component={StaffSchedule} />
+        <Stack.Screen name="FlightInformation" component={FlightInformation} />
+        <Stack.Screen name="PassengerDetails" component={PassengerDetails} />
         <Stack.Screen name="UserHome" component={UserHomePage} />
         <Stack.Screen name="UserProfile" component={UserProfilePage} />
         <Stack.Screen name="RidePage" component={RidePage} />
         <Stack.Screen name="HotelPage" component={HotelPage} />
         <Stack.Screen name="VIPPage" component={VIPPage} />
         <Stack.Screen name="BookFlightPage" component={BookFlightPage} />
+        <Stack.Screen name="RescheduleFlight" component={RescheduleFlight} />
+        <Stack.Screen name="CurrencyConverter" component={CurrencyConverter} />
+        <Stack.Screen name="CancelFlight" component={CancelFlight} />
+        <Stack.Screen name="SmartParking" component={SmartParking} />
+        <Stack.Screen name="TrackLuggage" component={TrackLuggagePage} />
+        <Stack.Screen name="TrackFlightStatus" component={TrackFlightStatusPage} />
+        <Stack.Screen name="CancelBookings" component={CancelBookings} />
       </Stack.Navigator>
     </NavigationContainer>
   );

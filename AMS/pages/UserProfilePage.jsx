@@ -5,8 +5,10 @@ import useAuth from '../hooks/useAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserProfilePage = ({ navigation }) => {
-  const { userData, setAuthState } = useAuth(); // Correct usage
+  const { userData, setAuthState, token } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [parkingBookings, setParkingBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(true);
 
   const fetchUserDetails = async () => {
     try {
@@ -15,7 +17,7 @@ const UserProfilePage = ({ navigation }) => {
         throw new Error('No token found');
       }
 
-      const response = await fetch('http://192.168.1.113:7798/me', {
+      const response = await fetch('http://192.168.1.7:7798/me', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -24,10 +26,6 @@ const UserProfilePage = ({ navigation }) => {
       });
 
       const data = await response.json();
-
-      console.log('User details:', data);
-
-      // ✅ Correctly update userData using setAuthState
       setAuthState(prev => ({
         ...prev,
         userData: data
@@ -39,15 +37,75 @@ const UserProfilePage = ({ navigation }) => {
     }
   };
 
+  const fetchParkingBookings = async () => {
+    try {
+      if (!userData?._id) return;
+      
+      const response = await fetch(
+        `http://192.168.1.7:7798/user-parking-reservations/${userData._id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setParkingBookings(data);
+    } catch (error) {
+      console.error('Error fetching parking bookings:', error);
+      alert('Failed to load parking bookings. Please try again later.');
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
   useEffect(() => {
     fetchUserDetails();
   }, []);
+
+  useEffect(() => {
+    if (userData?._id) {
+      fetchParkingBookings();
+    }
+  }, [userData?._id]);
 
   const handleBack = () => {
     navigation.reset({
       index: 0,
       routes: [{ name: 'UserHome' }],
     });
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      const response = await fetch(
+        `http://192.168.1.7:7798/cancel-parking-reservation/${bookingId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh bookings after successful cancellation
+      fetchParkingBookings();
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('Failed to cancel booking. Please try again later.');
+    }
   };
 
   if (loading) {
@@ -84,47 +142,73 @@ const UserProfilePage = ({ navigation }) => {
               <Ionicons name="ribbon-outline" size={18} color="#D1A7F7" />
               <Text style={styles.infoText}>Status: {userData?.status || 'N/A'}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="airplane-outline" size={18} color="#D1A7F7" />
-              <Text style={styles.infoText}>Air Miles: {userData?.airMiles || '0'}</Text>
-            </View>
           </View>
         </View>
 
-        {renderSection('Active Bookings', [
+        {/* Airport Parking Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Airport Parking</Text>
+          {loadingBookings ? (
+            <View style={styles.card}>
+              <ActivityIndicator size="small" color="#D1A7F7" />
+            </View>
+          ) : parkingBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.noBookingsText}>No active parking bookings</Text>
+            </View>
+          ) : (
+            parkingBookings.map((booking) => (
+              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Spot Number:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.spot?.terminalLocation}{booking.spot?.number}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Date:</Text>
+                  <Text style={styles.cardValue}>
+                    {new Date(booking.reservationDate).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Time:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.startTime} - {booking.endTime}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Vehicle:</Text>
+                  <Text style={styles.cardValue}>{booking.vehicleType}</Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>License:</Text>
+                  <Text style={styles.cardValue}>{booking.licensePlate}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancelBooking(booking._id)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Other sections... */}
+        {renderSection('Active Flights', [
           'Airline:',
           'Flight Number:',
           'Departure:',
-          'Destination:',
-          'Seat:',
-          'Class:'
+          'Destination:'
         ])}
 
-        {renderSection('Rentals', [
-          'Time:',
-          'Date:',
-          'Destination:',
-          'Vehicle:'
-        ])}
-
-        {renderSection('Hotels', [
+        {renderSection('Hotel Bookings', [
           'Hotel Name:',
-          'Date:',
+          'Check-in:',
+          'Check-out:',
           'Room Type:'
-        ])}
-
-        {renderSection('Lounges', [
-          'Date:',
-          'Time:',
-          'Lounge Type:'
-        ])}
-
-        {renderSection('Airport Parking', [
-          'Date:',
-          'Time:',
-          'Spot Number:',
-          'Vehicle Type:',
-          'License Number:'
         ])}
       </ScrollView>
     </View>
@@ -146,7 +230,6 @@ const UserProfilePage = ({ navigation }) => {
     );
   }
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -251,6 +334,23 @@ const styles = StyleSheet.create({
   cardValue: {
     fontSize: 15,
     color: '#333',
+  },
+  noBookingsText: {
+    fontSize: 15,
+    color: '#888',
+    textAlign: 'center',
+    paddingVertical: 15,
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,

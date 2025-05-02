@@ -18,8 +18,8 @@ const AdminLoginPage = ({ navigation }) => {
     }
   
     try {
-      console.log("Sending request to:", 'http://192.168.1.113:7798/admin-login');
-      const response = await axios.post('http://192.168.1.113:7798/admin-login', {
+      console.log("Sending request to:", 'http://192.168.1.7:7798/admin-login');
+      const response = await axios.post('http://192.168.1.7:7798/admin-login', {
         email: email.trim(),
         password: password.trim()
       }, {

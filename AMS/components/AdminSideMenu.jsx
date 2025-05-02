@@ -1,46 +1,33 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-export default function SideMenu() {
+export default function AdminSideMenu({ onClose }) {
   const navigation = useNavigation();
 
   const menuItems = [
-    { title: 'User Profile', screen: 'UserProfile' },
-    { title: 'Reschedule Flight', screen: 'RescheduleFlight' },
-    { title: 'Cancel Flight', screen: 'CancelFlight' },
-    { title: 'Smart Parking', screen: 'SmartParking' }, // Added Smart Parking here
-    { title: 'Check Flight Status', screen: 'TrackFlightStatus' },
-    { title: 'Currency Converter', screen: 'CurrencyConverter' },
-    { title: 'Track Luggage', screen: 'TrackLuggage' },
-    { title: 'Claim Rewards', screen: 'Rewards' },
-    { title: 'Manage Hangar', screen: 'ManageHangar' },
-    { title: 'Cancel Bookings', screen: 'CancelBookings' },
+    { title: 'Flight Information', screen: 'Flights' },
+    { title: 'Passenger Details', screen: 'PassengerDetails' },
+    { title: 'Staff Dashboard', screen: 'StaffDashboard' },
   ];
 
   return (
     <View style={styles.fullScreenMenu}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'UserHome' }],
-          });
-        }}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={onClose}>
         <Ionicons name="arrow-back" size={24} color="#fff" />
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
 
-      {/* Menu items */}
       <View style={styles.menuItems}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
-            onPress={() => navigation.navigate(item.screen)}
+            onPress={() => {
+              onClose();
+              setTimeout(() => navigation.navigate(item.screen), 100);
+            }}
           >
             <Text style={styles.menuText}>{item.title}</Text>
             <View style={styles.underline} />
