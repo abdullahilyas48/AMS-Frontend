@@ -22,7 +22,7 @@ const LoginPage = ({ navigation }) => {
   
     try {
       const response = await axios.post(
-        'http://192.168.1.7:7798/user-login',
+        'http://192.168.1.113:7798/user-login',
         { email: email.trim(), password: password.trim() },
         { timeout: 10000, headers: { 'Content-Type': 'application/json' } }
       );

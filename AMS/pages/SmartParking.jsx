@@ -40,8 +40,8 @@ const SmartParking = ({ navigation }) => {
   
     const fetchParkingSpots = async () => {
         try {
-            console.log('Fetching from URL: http://192.168.1.7:7798/parking-spots');
-            const response = await axios.get('http://192.168.1.7:7798/parking-spots');
+            console.log('Fetching from URL: http://192.168.1.113:7798/parking-spots');
+            const response = await axios.get('http://192.168.1.113:7798/parking-spots');
             setSpots(response.data);
             setLoading(false);
         } catch (error) {
@@ -128,7 +128,7 @@ const SmartParking = ({ navigation }) => {
             console.log('Booking payload:', bookingData);
     
             // Make booking request
-            const res = await axios.post('http://192.168.1.7:7798/parking-reservation', bookingData, {
+            const res = await axios.post('http://192.168.1.113:7798/parking-reservation', bookingData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${authToken}`
@@ -167,93 +167,48 @@ const SmartParking = ({ navigation }) => {
     };
 
     const handleCancelReservation = async () => {
-        // Validate reservation ID input
         if (!reservationId.trim()) {
-            alert('Please enter your Reservation ID');
-            return;
+          alert('Please enter your Reservation ID');
+          return;
         }
-    
-        // Check authentication
-        if (!isAuthenticated || !authToken) {  // Changed to authToken
-            alert('Please login to cancel a reservation');
-            navigation.navigate('Login');
-            return;
+      
+        if (!isAuthenticated || !authToken) {
+          alert('Please login to cancel a reservation');
+          navigation.navigate('Login');
+          return;
         }
-    
-        // Verify we have user ID
-        let userId = userData?._id;
-        if (!userId) {
-            try {
-                const freshUserData = await fetchUserDetails();
-                userId = freshUserData?._id;
-                if (!userId) {
-                    alert('User information not available. Please login again.');
-                    await authLogout();
-                    navigation.navigate('Login');
-                    return;
-                }
-            } catch (error) {
-                console.error('Error fetching user details:', error);
-                alert('Failed to verify user information. Please login again.');
-                await authLogout();
-                navigation.navigate('Login');
-                return;
-            }
-        }
-    
+      
         try {
-            // First verify the reservation exists and belongs to user
-            const verificationRes = await axios.get(
-                `http://192.168.1.7:7798/reservations/${reservationId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`  // Changed to authToken
-                    }
-                }
-            );
-    
-            if (verificationRes.data.userId !== userId) {
-                alert('❌ You can only cancel your own reservations');
-                return;
+          await axios.delete(
+            `http://192.168.1.113:7798/cancel-parking-reservation/${reservationId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
             }
-    
-            // If verification passed, proceed with cancellation
-            await axios.delete(
-                `http://192.168.1.7:7798/cancel-parking-reservation/${reservationId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`  // Changed to authToken
-                    }
-                }
-            );
-    
-            alert(`🗑️ Reservation Cancelled!\n\nID: ${reservationId}\n\nSpot has been made available for others.`);
-            
-            // Reset form and refresh data
-            setShowCancelForm(false);
-            setReservationId('');
-            fetchParkingSpots();
-            
+          );
+      
+          alert(`🗑️ Reservation Cancelled!\n\nID: ${reservationId}\n\nSpot has been made available for others.`);
+      
+          setShowCancelForm(false);
+          setReservationId('');
+          fetchParkingSpots();
+      
         } catch (error) {
-            console.error('Cancellation error:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
-            });
-    
-            if (error.response) {
-                if (error.response.status === 404) {
-                    alert('🔍 Reservation not found\nPlease check your Reservation ID');
-                } else if (error.response.status === 403) {
-                    alert('⛔ Access Denied\nYou can only cancel your own reservations');
-                } else {
-                    alert(error.response.data?.message || '❌ Failed to cancel reservation');
-                }
-            } else {
-                alert('🌐 Network Error\nPlease check your internet connection');
-            }
+          console.error('Cancellation error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+          });
+      
+          if (error.response?.status === 404) {
+            alert('🔍 Reservation not found\nPlease check your Reservation ID');
+          } else {
+            alert(error.response?.data?.message || '❌ Failed to cancel reservation');
+          }
         }
-    };
+      };
+      
   
     const renderSpot = ({ item }) => (
         <View 

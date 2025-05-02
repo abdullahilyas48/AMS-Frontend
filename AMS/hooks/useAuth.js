@@ -51,7 +51,7 @@ const useAuth = () => {
         const token = await AsyncStorage.getItem('userToken');
         if (!token) throw new Error('No token found');
 
-        const response = await fetch('http://192.168.1.7:7798/me', {
+        const response = await fetch('http://192.168.1.113:7798/me', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

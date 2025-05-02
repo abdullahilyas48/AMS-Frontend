@@ -23,7 +23,6 @@ import CurrencyConverter from './pages/CurrencyConverter'
 import CancelFlight from './pages/CancelFlight'
 import UserProfilePage from './pages/UserProfilePage';
 import SmartParking from './pages/SmartParking';
-import ParkingReservation from './pages/ParkingReservation';
 import TrackLuggagePage from './pages/TrackLuggagePage';
 import TrackFlightStatusPage from './pages/TrackFlightStatusPage';
 import CancelBookings from './pages/CancelBookings'
