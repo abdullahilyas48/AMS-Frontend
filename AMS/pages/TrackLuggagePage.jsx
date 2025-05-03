@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 export default function TrackLuggagePage() {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation(); 
   const [luggageId, setLuggageId] = useState('');
   const [flightNumber, setFlightNumber] = useState('');
   const [status, setStatus] = useState('');

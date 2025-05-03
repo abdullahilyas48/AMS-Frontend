@@ -21,7 +21,7 @@ const HotelBookingPage = () => {
 
   const fetchAvailableRooms = async () => {
     try {
-      const response = await axios.get(`http://192.168.100.18:7798/hotel-rooms?minPrice=${priceRange[0]}&maxPrice=${priceRange[1]}`);
+      const response = await axios.get(`http://192.168.1.7:7798/hotel-rooms?minPrice=${priceRange[0]}&maxPrice=${priceRange[1]}`);
       setRooms(response.data);
     } catch (err) {
       Alert.alert("Error", "Failed to fetch hotel rooms.");
@@ -34,8 +34,6 @@ const HotelBookingPage = () => {
   };
 
   const handleBooking = async () => {
-    console.log("Current User Data:", userData);
-
     if (!selectedRoom) {
       Alert.alert("Please select a room to book.");
       return;
@@ -46,16 +44,25 @@ const HotelBookingPage = () => {
       return;
     }
 
+    const userID = userData?._id || userData?.id;
+
     try {
       const payload = {
+        userId: userID,
         userEmail: userData.email,
         hotelName: selectedRoom.hotelName,
         roomType: selectedRoom.roomType,
         date: date.toISOString().split('T')[0],
       };
 
-      const response = await axios.post('http://192.168.100.18:7798/hotel-book', payload);
-      Alert.alert("Success", response.data.message);
+      const response = await axios.post('http://192.168.1.7:7798/hotel-book', payload);
+      const booking = response.data.booking;
+
+      Alert.alert(
+        "✅ Booking Successful!",
+        `Reservation ID: ${booking._id}\nHotel: ${booking.hotelName}\nRoom Type: ${booking.roomType}\nPrice: Rs. ${booking.price}\nDate: ${booking.date}`
+      );
+
       fetchAvailableRooms();
     } catch (error) {
       console.error("Booking error:", error.response?.data || error.message);
@@ -113,12 +120,12 @@ const HotelBookingPage = () => {
           </View>
         )}
 
-            <PrimaryButton
-             label="Book Selected Room"
-             onPress={handleBooking}
-           disabled={!selectedRoom}
-             style={{ marginTop: 40 }}  // Adjust this value as needed
-         />
+        <PrimaryButton
+          label="Book Selected Room"
+          onPress={handleBooking}
+          disabled={!selectedRoom}
+          style={{ marginTop: 40 }}
+        />
       </View>
     </ScrollView>
   );
@@ -128,58 +135,63 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     backgroundColor: '#E5D4ED',
-    paddingBottom: 40,
-    justifyContent: 'center',
+    paddingVertical: 30,
     alignItems: 'center',
   },
-  
   container: {
+    marginTop: 150,
     padding: 20,
     backgroundColor: '#F4E8FF',
-    margin: 20,
-    borderRadius: 15,
-    elevation: 4,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
     width: '90%',
-    minHeight: 600,
+    minHeight: 500,
   },
   heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#5D3FD3',
     textAlign: 'center',
-    color: '#000',
+    marginBottom: 25,
   },
   label: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
     marginTop: 20,
-    marginBottom: 10,
-    color: '#000',
+    marginBottom: 6,
   },
   blackText: {
-    color: '#000',
+    color: '#333',
+    fontSize: 15,
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 10,
-    backgroundColor: '#E0D3F5',
+    backgroundColor: '#F4F0FB',
+    borderColor: '#C7B8EC',
+    borderWidth: 1,
   },
   dropdownList: {
-    backgroundColor: '#E0D3F5',
+    backgroundColor: '#F4F0FB',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#C7B8EC',
     borderRadius: 10,
     marginTop: 5,
     paddingHorizontal: 10,
+    maxHeight: 180,
   },
   dropdownItem: {
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomWidth: 0.8,
+    borderBottomColor: '#D6CCF1',
   },
 });
 

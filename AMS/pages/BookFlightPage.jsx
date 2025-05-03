@@ -117,7 +117,25 @@ const BookFlight = () => {
       });
 
       if (response.data.message === 'Flight booked successfully') {
-        Alert.alert('Success', 'Your flight has been booked!');
+        if (response.data.message === 'Flight booked successfully') {
+  const booking = response.data.booking;
+  const bookedAtDate = new Date(booking.bookedAt).toLocaleString();
+
+  Alert.alert(
+    'Success',
+    `Your flight has been booked!\n\n` +
+    `Booking ID: ${booking._id}\n` +
+    `User ID: ${booking.userId}\n` +
+    `Flight ID: ${booking.flightId}\n` +
+    `Luggage Weight: ${booking.luggageWeight} kg\n` +
+    `Seat Number: ${booking.seatNumber}\n` +
+    `Booked At: ${bookedAtDate}`
+  );
+
+  setBookingId(booking._id);
+  console.log('Booking response:', response.data);
+}
+
         setBookingId(response.data.booking._id);
         console.log('Booking response:', response.data);
       } else {

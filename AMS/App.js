@@ -20,12 +20,17 @@ import VIPPage from './pages/VIPPage';
 import BookFlightPage from './pages/BookFlightPage';
 import RescheduleFlight from './pages/RescheduleFlight';
 import CurrencyConverter from './pages/CurrencyConverter'
+import RewardsScreen from './pages/Rewards';
 import CancelFlight from './pages/CancelFlight'
 import UserProfilePage from './pages/UserProfilePage';
 import SmartParking from './pages/SmartParking';
 import TrackLuggagePage from './pages/TrackLuggagePage';
 import TrackFlightStatusPage from './pages/TrackFlightStatusPage';
 import CancelBookings from './pages/CancelBookings'
+import ManageHangarsPage from './pages/ManageHangarsPage';
+import AddAirplanePage from './pages/AddAirplanePage';
+import BookHangarPage from './pages/BookHangarPage';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -69,11 +74,16 @@ export default function App() {
         <Stack.Screen name="BookFlightPage" component={BookFlightPage} />
         <Stack.Screen name="RescheduleFlight" component={RescheduleFlight} />
         <Stack.Screen name="CurrencyConverter" component={CurrencyConverter} />
+        <Stack.Screen name="Rewards" component={RewardsScreen} />
         <Stack.Screen name="CancelFlight" component={CancelFlight} />
         <Stack.Screen name="SmartParking" component={SmartParking} />
         <Stack.Screen name="TrackLuggage" component={TrackLuggagePage} />
         <Stack.Screen name="TrackFlightStatus" component={TrackFlightStatusPage} />
         <Stack.Screen name="CancelBookings" component={CancelBookings} />
+        <Stack.Screen name="ManageHangars" component={ManageHangarsPage} />
+        <Stack.Screen name="BookHangar" component={BookHangarPage} />
+        <Stack.Screen name="AddAirplane" component={AddAirplanePage} />
+      
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -18,9 +18,9 @@ const SmartParking = ({ navigation }) => {
     const [inputTerminal, setInputTerminal] = useState('');
     const [showCancelForm, setShowCancelForm] = useState(false);
     const [reservationId, setReservationId] = useState('');
-    const [date, setDate] = useState(null); // Changed to null for DateSelector
-    const [time, setTime] = useState(''); // Keep as string for TimeSelector
-    const [duration, setDuration] = useState('');
+    const [date, setDate] = useState(null);
+    const [time, setTime] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [fullName, setFullName] = useState('');
     const [vehicleType, setVehicleType] = useState('');
     const [licensePlate, setLicensePlate] = useState('');
@@ -40,8 +40,7 @@ const SmartParking = ({ navigation }) => {
   
     const fetchParkingSpots = async () => {
         try {
-            console.log('Fetching from URL: http://192.168.1.113:7798/parking-spots');
-            const response = await axios.get('http://192.168.1.113:7798/parking-spots');
+            const response = await axios.get('http://192.168.1.7:7798/parking-spots');
             setSpots(response.data);
             setLoading(false);
         } catch (error) {
@@ -51,69 +50,49 @@ const SmartParking = ({ navigation }) => {
     };
 
     const handleManualBooking = async () => {
-        // Validate all form fields
-        if (!inputSlotNumber || !inputTerminal || !date || !time || !duration || 
+        if (!inputSlotNumber || !inputTerminal || !date || !time || !endTime || 
             !fullName || !vehicleType || !licensePlate) {
             alert('Please fill in all fields.');
             return;
         }
-    
-        // Check authentication status first
+
         if (!isAuthenticated) {
             alert('Please login to book a parking spot.');
             navigation.navigate('Login');
             return;
         }
-    
-        console.log('Initial User Data:', userData);
-    
-        // Check if we have user ID from existing data
+
         let userId = userData?._id;
         
-        // If no ID found in existing data, try to fetch fresh data
         if (!userId) {
             try {
                 const freshUserData = await fetchUserDetails();
-                console.log('Fresh User Data:', freshUserData);
-                
-                if (!freshUserData?._id) {
-                    throw new Error('No user ID found in fresh data');
-                }
+                if (!freshUserData?._id) throw new Error('No user ID found');
                 userId = freshUserData._id;
             } catch (error) {
-                console.error('Error fetching user details:', error);
                 alert('Failed to verify user information. Please login again.');
                 await authLogout();
                 navigation.navigate('Login');
                 return;
             }
         }
-    
-        // Find matching parking spot
+
         const matchingSpot = spots.find(
             spot => String(spot.number).toUpperCase() === inputSlotNumber.toUpperCase() &&
                    String(spot.terminalLocation).toLowerCase() === inputTerminal.toLowerCase()
         );
-    
+
         if (!matchingSpot) {
             alert('No such slot found.');
             return;
         }
-    
+
         if (!matchingSpot.isAvailable) {
             alert('This slot is already occupied.');
             return;
         }
-    
+
         try {
-            // Calculate end time based on duration
-            const [hours, minutes] = time.split(':').map(Number);
-            const endTime = new Date();
-            endTime.setHours(hours + parseInt(duration));
-            endTime.setMinutes(minutes);
-            const formattedEndTime = `${endTime.getHours()}:${endTime.getMinutes().toString().padStart(2, '0')}`;
-    
-            // Prepare booking data
             const bookingData = {
                 selectedSpotId: matchingSpot._id,
                 fullName,
@@ -121,95 +100,72 @@ const SmartParking = ({ navigation }) => {
                 licensePlate,
                 reservationDate: date.toISOString().split('T')[0],
                 startTime: time,
-                endTime: formattedEndTime,
+                endTime,
                 userId
             };
-    
-            console.log('Booking payload:', bookingData);
-    
-            // Make booking request
-            const res = await axios.post('http://192.168.1.113:7798/parking-reservation', bookingData, {
+
+            const res = await axios.post('http://192.168.1.7:7798/parking-reservation', bookingData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${authToken}`
                 }
             });
-    
-            // Handle success with reservation ID
+
             if (res.data.reservation && res.data.reservation._id) {
                 alert(`✅ Booking Successful!\n\nReservation ID: ${res.data.reservation._id}\nSpot: ${inputTerminal}${inputSlotNumber}\nDate: ${new Date(res.data.reservation.reservationDate).toLocaleDateString()}\nTime: ${res.data.reservation.startTime} to ${res.data.reservation.endTime}\n\nPlease save your Reservation ID for future reference.`);
             } else {
                 alert('Booking successful, but could not retrieve reservation details');
             }
-    
-            
-            // Clear form fields
+
             setShowInputForm(false);
             setInputSlotNumber('');
             setInputTerminal('');
             setDate(null);
             setTime('');
-            setDuration('');
+            setEndTime('');
             setFullName('');
             setVehicleType('');
             setLicensePlate('');
             
-            // Refresh parking spots
             fetchParkingSpots();
         } catch (err) {
-            console.error('Booking error:', {
-                message: err.message,
-                response: err.response?.data,
-                stack: err.stack
-            });
+            console.error('Booking error:', err);
             alert(err.response?.data?.message || 'Booking failed. Please try again.');
         }
     };
 
     const handleCancelReservation = async () => {
         if (!reservationId.trim()) {
-          alert('Please enter your Reservation ID');
-          return;
+            alert('Please enter your Reservation ID');
+            return;
         }
-      
+
         if (!isAuthenticated || !authToken) {
-          alert('Please login to cancel a reservation');
-          navigation.navigate('Login');
-          return;
+            alert('Please login to cancel a reservation');
+            navigation.navigate('Login');
+            return;
         }
-      
+
         try {
-          await axios.delete(
-            `http://192.168.1.113:7798/cancel-parking-reservation/${reservationId}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${authToken}`
-              }
-            }
-          );
-      
-          alert(`🗑️ Reservation Cancelled!\n\nID: ${reservationId}\n\nSpot has been made available for others.`);
-      
-          setShowCancelForm(false);
-          setReservationId('');
-          fetchParkingSpots();
-      
+            await axios.delete(
+                `http://192.168.1.7:7798/cancel-parking-reservation/${reservationId}`,
+                { headers: { 'Authorization': `Bearer ${authToken}` } }
+            );
+
+            alert(`🗑️ Reservation Cancelled!\n\nID: ${reservationId}`);
+            setShowCancelForm(false);
+            setReservationId('');
+            fetchParkingSpots();
         } catch (error) {
-          console.error('Cancellation error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-          });
-      
-          if (error.response?.status === 404) {
-            alert('🔍 Reservation not found\nPlease check your Reservation ID');
-          } else {
-            alert(error.response?.data?.message || '❌ Failed to cancel reservation');
-          }
+            console.error('Cancellation error:', error);
+            if (error.response?.status === 404) {
+                alert('Reservation not found. Check your ID.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to cancel reservation.');
+            }
         }
-      };
+    };
       
-  
     const renderSpot = ({ item }) => (
         <View 
             style={[ 
@@ -225,6 +181,9 @@ const SmartParking = ({ navigation }) => {
             />
             <Text style={styles.spotNumber}>{String(item.number)}</Text>
             <Text style={styles.spotLocation}>{String(item.terminalLocation)}</Text>
+            {!item.isAvailable && (
+                <Text style={styles.occupiedText}>Occupied</Text>
+            )}
         </View>
     );
 
@@ -232,17 +191,14 @@ const SmartParking = ({ navigation }) => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity 
-                    onPress={() => navigation.goBack()}
-                    style={styles.backButton}
-                >
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Smart Parking</Text>
                 <View style={{ width: 24 }} />
             </View>
-    
-            {/* Stats Card */}
+
+            {/* Stats */}
             <View style={styles.statsCard}>
                 <View style={styles.statItem}>
                     <Text style={styles.statValue}>{spots.filter(s => s.isAvailable).length}</Text>
@@ -254,8 +210,8 @@ const SmartParking = ({ navigation }) => {
                     <Text style={styles.statLabel}>Total Spots</Text>
                 </View>
             </View>
-    
-            {/* Parking Spots Grid */}
+
+            {/* Grid */}
             <View style={styles.content}>
                 {loading ? (
                     <View style={styles.loadingContainer}>
@@ -274,113 +230,48 @@ const SmartParking = ({ navigation }) => {
                     />
                 )}
             </View>
-    
+
+            {/* Action Buttons */}
             <View style={styles.buttonContainer}>
-                <TouchableOpacity 
-                    style={styles.bookNowButton}
-                    onPress={() => setShowInputForm(true)}
-                >
+                <TouchableOpacity style={styles.bookNowButton} onPress={() => setShowInputForm(true)}>
                     <Text style={styles.bookNowText}>Book Now</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.cancelReservationButton}
-                    onPress={() => setShowCancelForm(true)}
-                >
+                <TouchableOpacity style={styles.cancelReservationButton} onPress={() => setShowCancelForm(true)}>
                     <Text style={styles.cancelReservationText}>Cancel Reservation</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Booking Form */}
+            {/* Booking Form Modal */}
             {showInputForm && (
                 <View style={styles.modalOverlay}>
                     <ScrollView style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Book Parking Spot</Text>
-                        
-                        <Text style={styles.inputLabel}>Slot Number (e.g., D1, C2):</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={inputSlotNumber}
-                            onChangeText={setInputSlotNumber}
-                            placeholder="Slot Number"
-                            placeholderTextColor="#aaa"
-                            autoCapitalize="characters"
-                        />
 
-                        <Text style={styles.inputLabel}>Terminal Location:</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={inputTerminal}
-                            onChangeText={setInputTerminal}
-                            placeholder="Terminal"
-                            placeholderTextColor="#aaa"
-                        />
+                        <Text style={styles.inputLabel}>Slot Number:</Text>
+                        <TextInput style={styles.inputField} value={inputSlotNumber} onChangeText={setInputSlotNumber} placeholder="D1" placeholderTextColor="#aaa" autoCapitalize="characters" />
 
-<DateSelector 
-                            label="Date"
-                            date={date}
-                            onDateChange={setDate}
-                        />
+                        <Text style={styles.inputLabel}>Terminal:</Text>
+                        <TextInput style={styles.inputField} value={inputTerminal} onChangeText={setInputTerminal} placeholder="Terminal" placeholderTextColor="#aaa" />
 
-                        <TimeSelector 
-                            label="Time"
-                            time={time}
-                            onTimeChange={setTime}
-                        />
-
-<Text style={styles.inputLabel}>Duration (hours):</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={duration}
-                            onChangeText={setDuration}
-                            placeholder="e.g., 2"
-                            placeholderTextColor="#aaa"
-                            keyboardType="numeric"
-                        />
+                        <DateSelector label="Date" date={date} onDateChange={setDate} />
+                        <TimeSelector label="Start Time" time={time} onTimeChange={setTime} />
+                        <TimeSelector label="End Time" time={endTime} onTimeChange={setEndTime} />
 
                         <Text style={styles.inputLabel}>Full Name:</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={fullName}
-                            onChangeText={setFullName}
-                            placeholder="Full Name"
-                            placeholderTextColor="#aaa"
-                        />
+                        <TextInput style={styles.inputField} value={fullName} onChangeText={setFullName} placeholder="John Doe" placeholderTextColor="#aaa" />
 
                         <Text style={styles.inputLabel}>Vehicle Type:</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={vehicleType}
-                            onChangeText={setVehicleType}
-                            placeholder="e.g., Sedan"
-                            placeholderTextColor="#aaa"
-                        />
+                        <TextInput style={styles.inputField} value={vehicleType} onChangeText={setVehicleType} placeholder="SUV" placeholderTextColor="#aaa" />
 
                         <Text style={styles.inputLabel}>License Plate:</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={licensePlate}
-                            onChangeText={setLicensePlate}
-                            placeholder="e.g., AB123CD"
-                            placeholderTextColor="#aaa"
-                        />
+                        <TextInput style={styles.inputField} value={licensePlate} onChangeText={setLicensePlate} placeholder="AB123CD" placeholderTextColor="#aaa" />
 
                         <View style={styles.modalButtonRow}>
-                            <TouchableOpacity 
-                                style={styles.cancelButton} 
-                                onPress={() => {
-                                    setShowInputForm(false);
-                                    setInputSlotNumber('');
-                                    setInputTerminal('');
-                                }}
-                            >
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowInputForm(false); setInputSlotNumber(''); setInputTerminal(''); }}>
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity 
-                                style={styles.submitButton} 
-                                onPress={handleManualBooking}
-                            >
+                            <TouchableOpacity style={styles.submitButton} onPress={handleManualBooking}>
                                 <Text style={styles.submitButtonText}>Book Now</Text>
                             </TouchableOpacity>
                         </View>
@@ -388,36 +279,20 @@ const SmartParking = ({ navigation }) => {
                 </View>
             )}
 
-            {/* Cancel Reservation Form */}
+            {/* Cancel Modal */}
             {showCancelForm && (
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Cancel Reservation</Text>
-                        
-                        <Text style={styles.inputLabel}>Enter Reservation ID:</Text>
-                        <TextInput
-                            style={styles.inputField}
-                            value={reservationId}
-                            onChangeText={setReservationId}
-                            placeholder="Reservation ID"
-                            placeholderTextColor="#aaa"
-                        />
+
+                        <Text style={styles.inputLabel}>Reservation ID:</Text>
+                        <TextInput style={styles.inputField} value={reservationId} onChangeText={setReservationId} placeholder="ID..." placeholderTextColor="#aaa" />
 
                         <View style={styles.modalButtonRow}>
-                            <TouchableOpacity 
-                                style={styles.cancelButton} 
-                                onPress={() => {
-                                    setShowCancelForm(false);
-                                    setReservationId('');
-                                }}
-                            >
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowCancelForm(false); setReservationId(''); }}>
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity 
-                                style={styles.submitButton} 
-                                onPress={handleCancelReservation}
-                            >
+                            <TouchableOpacity style={styles.submitButton} onPress={handleCancelReservation}>
                                 <Text style={styles.submitButtonText}>Confirm</Text>
                             </TouchableOpacity>
                         </View>
@@ -520,7 +395,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#AB47BC',
     },
     occupiedSpot: {
-        backgroundColor: '#7B1FA2',
+        backgroundColor: '#6A1B9A',
     },
     spotNumber: {
         marginTop: 5,
@@ -532,6 +407,12 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: 'rgba(255,255,255,0.8)',
         marginTop: 2,
+    },
+    occupiedText: {
+        fontSize: 10,
+        color: 'rgba(255,255,255,0.9)',
+        marginTop: 2,
+        fontStyle: 'italic',
     },
     loadingContainer: {
         flex: 1,

@@ -11,13 +11,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import PrimaryButton from '../components/PrimaryButton';
-import useAuth from '../hooks/useAuth'; // Importing the useAuth hook
-import DateSelector from '../components/DateSelector'; // Adjust path if needed
+import useAuth from '../hooks/useAuth'; 
+import DateSelector from '../components/DateSelector'; 
 import InputField from '../components/InputField';
 import axios from 'axios';
 
 const RescheduleFlight = () => {
-  const { isAuthenticated, userData, isLoading } = useAuth(); // Accessing the updated auth state
+  const { isAuthenticated, userData, isLoading } = useAuth(); 
   const [bookedFlights, setBookedFlights] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [availableOptions, setAvailableOptions] = useState(null);
@@ -43,7 +43,7 @@ const RescheduleFlight = () => {
       const response = await axios.get('http://192.168.1.7:7798/booked-flights');
       const data = response.data.message === 'No bookings found.' ? [] : response.data;
       setBookedFlights(data);
-      setShowDropdown(!showDropdown); // Toggle dropdown visibility
+      setShowDropdown(!showDropdown); 
     } catch (error) {
       console.error('Error fetching bookings:', error);
       Alert.alert('Error', 'Failed to fetch your bookings.');
@@ -54,13 +54,12 @@ const RescheduleFlight = () => {
   
   const fetchAvailableOptions = async (booking) => {
     try {
-      // Fetch options for rescheduling
       const options = {
         dates: [booking.flightId.date],
         times: [booking.flightId.time],
-        classes: ['Economy', 'Business', 'First Class'], // Example options
-        luggageOptions: [15, 20, 25], // Default luggage options
-        seatNumbers: ['A1', 'B1', 'C1'], // Example seat options
+        classes: ['Economy', 'Business', 'First Class'], 
+        luggageOptions: [15, 20, 25], 
+        seatNumbers: ['A1', 'B1', 'C1'], 
       };
 
       setAvailableOptions(options);
@@ -84,20 +83,17 @@ const RescheduleFlight = () => {
     }
   
     try {
-      // 1. Fetch all flights with the same route
       const response = await axios.get('http://192.168.1.7:7798/flights');
       const allFlights = response.data;
   
       const formattedNewDate = newDate instanceof Date ? newDate.toISOString().split('T')[0] : '';
   
-      // 2. Filter all flights for the same route
       const sameRouteFlights = allFlights.filter(
         (flight) =>
           flight.from.toLowerCase() === selectedBooking.flightId.from.toLowerCase() &&
           flight.to.toLowerCase() === selectedBooking.flightId.to.toLowerCase()
       );
   
-      // 3. Find perfect match
       const exactMatch = sameRouteFlights.find(
         (flight) =>
           flight.date === formattedNewDate &&
@@ -107,7 +103,6 @@ const RescheduleFlight = () => {
       
   
       if (exactMatch) {
-        // Proceed with rescheduling
         const rescheduleResponse = await axios.post(
           'http://192.168.1.7:7798/reschedule-flight',
           {
@@ -132,8 +127,7 @@ const RescheduleFlight = () => {
           Alert.alert('Error', rescheduleResponse.data?.error || 'Unknown error occurred.');
         }
       } else {
-        // 4. Show alternative available flights
-        setMatchingFlights(sameRouteFlights); // This will show all available flights for the same route
+        setMatchingFlights(sameRouteFlights); 
   
         let message = "The selected flight with your provided options is not available.\n";
         if (sameRouteFlights.length > 0) {
@@ -231,7 +225,7 @@ const styles = StyleSheet.create({
       elevation: 4,
       width: '90%',
       minHeight: 600,
-      justifyContent: 'center', // center content vertically
+      justifyContent: 'center', 
     },
     title: {
       fontSize: 26,
@@ -276,14 +270,14 @@ const styles = StyleSheet.create({
       marginBottom: 15,
       borderWidth: 1,
       borderColor: '#ccc',
-      width: '95%', // match the card width
+      width: '95%', 
       alignSelf: 'center',
     },
     modalWrapper: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.5)', // Optional: adds a dim background
+      backgroundColor: 'rgba(0,0,0,0.5)', 
     },
     
     modalContainer: {
@@ -291,8 +285,8 @@ const styles = StyleSheet.create({
       padding: 20,
       borderRadius: 10,
       flex: 1,
-      justifyContent: 'center', // centers vertically
-      alignItems: 'center',     // centers horizontally
+      justifyContent: 'center', 
+      alignItems: 'center',     
     },
     dropdownContainer: {
         backgroundColor: '#D8B4FE',

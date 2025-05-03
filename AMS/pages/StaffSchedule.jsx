@@ -49,7 +49,6 @@ export default function StaffSchedule({ navigation }) {
         <View style={styles.headerPlaceholder} />
       </View>
 
-      {/* Content with light purple background */}
       <View style={styles.content}>
         {/* Filter Inputs */}
         <View style={styles.filterContainer}>
@@ -110,7 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#8d56aa', // Dark purple header
+    backgroundColor: '#8d56aa', 
     paddingVertical: 15,
     paddingHorizontal: 20,
     paddingTop: 50,
@@ -124,7 +123,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: '#e9d4f4', // Light purple background
+    backgroundColor: '#e9d4f4', 
     paddingBottom: 20,
   },
   headerTitle: {
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#e9d4f4', // Match light purple background
+    backgroundColor: '#e9d4f4', 
   },
   input: {
     backgroundColor: '#fff',
@@ -159,11 +158,11 @@ const styles = StyleSheet.create({
   },
   tableScroll: {
     flex: 1,
-    backgroundColor: '#e9d4f4', // Light purple background
+    backgroundColor: '#e9d4f4', 
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#9c64b5', // Medium purple header
+    backgroundColor: '#9c64b5', 
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     marginHorizontal: 15,
@@ -186,13 +185,13 @@ const styles = StyleSheet.create({
     width: cellWidth,
     padding: 12,
     textAlign: 'center',
-    backgroundColor: '#fff', // White cells for contrast
+    backgroundColor: '#fff', 
   },
   noDataContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#e9d4f4', // Light purple background
+    backgroundColor: '#e9d4f4', 
   },
   noData: {
     color: '#888',

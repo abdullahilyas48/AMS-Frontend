@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: '#f0e6f5', // Very light purple
+    backgroundColor: '#f0e6f5', 
     paddingBottom: 20,
   },
   headerTitle: {

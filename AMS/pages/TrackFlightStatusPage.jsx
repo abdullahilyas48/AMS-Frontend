@@ -42,11 +42,9 @@ const TrackFlightStatusPage = ({ navigation }) => {
   
       const flight = JSON.parse(text);
   
-      // Update route data to match the response format
       const from = flight.departure?.location;
       const to = flight.destination?.location;
   
-      // Debug: Check for required fields
       if (!from || !to) {
         console.warn('Missing route data in response:', {
           hasFrom: !!from,
@@ -56,7 +54,6 @@ const TrackFlightStatusPage = ({ navigation }) => {
         throw new Error('Flight data incomplete - missing route information');
       }
   
-      // Calculate progress based on status
       let progress = 0;
       switch(flight.status) {
         case 'Boarding': progress = 0.1; break;
@@ -67,7 +64,6 @@ const TrackFlightStatusPage = ({ navigation }) => {
         default: progress = 0;
       }
   
-      // Update flight data with proper from/to values
       setFlightData({
         ...flight,
         from,

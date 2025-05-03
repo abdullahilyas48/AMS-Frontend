@@ -29,7 +29,7 @@ const BookLounge = () => {
   useEffect(() => {
     const fetchLounges = async () => {
       try {
-        const response = await axios.get('http://192.168.100.18:7798/lounges', {
+        const response = await axios.get('http://192.168.1.7:7798/lounges', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLounges(response.data);
@@ -46,11 +46,11 @@ const BookLounge = () => {
       Alert.alert('Error', 'Please fill in all the fields');
       return;
     }
-
+  
     setLoading(true);
     try {
-      await axios.post(
-        'http://192.168.100.18:7798/book-lounge',
+      const response = await axios.post(
+        'http://192.168.1.7:7798/book-lounge',
         {
           userId: userData.id,
           loungeId: selectedLounge,
@@ -59,7 +59,22 @@ const BookLounge = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Alert.alert('Success', 'Lounge booked successfully');
+  
+      const { booking } = response.data;
+      const loungeName = lounges.find((l) => l._id === booking.loungeId)?.name || 'Selected Lounge';
+  
+      Alert.alert(
+        'Success',
+        `Lounge booked successfully!\n\n` +
+        `Lounge: ${loungeName}\n` +
+        `Date: ${booking.date}\n` +
+        `Time: ${booking.time}\n` +
+        `User ID: ${booking.userId}\n` +
+        `Lounge ID: ${booking.loungeId}\n` +
+        `Booking ID: ${booking._id}\n` +
+        `Created At: ${new Date(booking.createdAt).toLocaleString()}`
+      );
+      
     } catch (error) {
       console.error('Booking failed:', error);
       Alert.alert('Error', 'Failed to book the lounge');
@@ -67,6 +82,7 @@ const BookLounge = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.contentContainer}>

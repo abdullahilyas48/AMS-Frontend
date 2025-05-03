@@ -10,12 +10,12 @@ export default function SideMenu() {
     { title: 'User Profile', screen: 'UserProfile' },
     { title: 'Reschedule Flight', screen: 'RescheduleFlight' },
     { title: 'Cancel Flight', screen: 'CancelFlight' },
-    { title: 'Smart Parking', screen: 'SmartParking' }, // Added Smart Parking here
     { title: 'Check Flight Status', screen: 'TrackFlightStatus' },
+    { title: 'Smart Parking', screen: 'SmartParking' }, 
     { title: 'Currency Converter', screen: 'CurrencyConverter' },
     { title: 'Track Luggage', screen: 'TrackLuggage' },
     { title: 'Claim Rewards', screen: 'Rewards' },
-    { title: 'Manage Hangar', screen: 'ManageHangar' },
+    { title: 'Manage Hangar', screen: 'ManageHangars' },
     { title: 'Cancel Bookings', screen: 'CancelBookings' },
   ];
 

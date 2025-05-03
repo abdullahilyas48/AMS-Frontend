@@ -8,7 +8,18 @@ const UserProfilePage = ({ navigation }) => {
   const { userData, setAuthState, token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [parkingBookings, setParkingBookings] = useState([]);
-  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [flightBookings, setFlightBookings] = useState([]);
+  const [hotelBookings, setHotelBookings] = useState([]);
+  const [loungeBookings, setLoungeBookings] = useState([]);
+  const [vehicleBookings, setVehicleBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState({
+    parking: true,
+    flights: true,
+    hotels: true,
+    lounges: true,
+    vehicles: true
+  });
+  const [error, setError] = useState(null);
 
   const fetchUserDetails = async () => {
     try {
@@ -25,6 +36,11 @@ const UserProfilePage = ({ navigation }) => {
         }
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch user details: ${errorText}`);
+      }
+
       const data = await response.json();
       setAuthState(prev => ({
         ...prev,
@@ -32,6 +48,7 @@ const UserProfilePage = ({ navigation }) => {
       }));
     } catch (error) {
       console.error('Error fetching user details:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -39,8 +56,11 @@ const UserProfilePage = ({ navigation }) => {
 
   const fetchParkingBookings = async () => {
     try {
-      if (!userData?._id) return;
+      setLoadingBookings(prev => ({ ...prev, parking: true }));
+      setError(null);
       
+      if (!token || !userData?._id) return;
+
       const response = await fetch(
         `http://192.168.1.7:7798/user-parking-reservations/${userData._id}`,
         {
@@ -51,28 +71,174 @@ const UserProfilePage = ({ navigation }) => {
           }
         }
       );
-
+  
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Parking: ${response.status}: ${errorText}`);
       }
-
+  
       const data = await response.json();
       setParkingBookings(data);
     } catch (error) {
-      console.error('Error fetching parking bookings:', error);
-      alert('Failed to load parking bookings. Please try again later.');
+      console.error('Parking booking error:', error);
+      setError(error.message);
     } finally {
-      setLoadingBookings(false);
+      setLoadingBookings(prev => ({ ...prev, parking: false }));
     }
   };
 
-  useEffect(() => {
-    fetchUserDetails();
-  }, []);
+  const fetchFlightBookings = async () => {
+    try {
+      setLoadingBookings(prev => ({ ...prev, flights: true }));
+      setError(null);
+      
+      if (!token || !userData?._id) return;
+
+      const response = await fetch(
+        `http://192.168.1.7:7798/user-flight-bookings/${userData._id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Flights: ${response.status}: ${errorText}`);
+      }
+  
+      const data = await response.json();
+      setFlightBookings(data);
+    } catch (error) {
+      console.error('Flight booking error:', error);
+      setError(error.message);
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, flights: false }));
+    }
+  };
+
+  const fetchHotelBookings = async () => {
+    try {
+      setLoadingBookings(prev => ({ ...prev, hotels: true }));
+      setError(null);
+      
+      if (!token || !userData?._id) return;
+
+      const response = await fetch(
+        `http://192.168.1.7:7798/user-hotel-bookings/${userData._id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Hotels: ${response.status}: ${errorText}`);
+      }
+  
+      const data = await response.json();
+      setHotelBookings(data);
+    } catch (error) {
+      console.error('Hotel booking error:', error);
+      setError(error.message);
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, hotels: false }));
+    }
+  };
+
+  const fetchLoungeBookings = async () => {
+    try {
+      setLoadingBookings(prev => ({ ...prev, lounges: true }));
+      setError(null);
+      
+      if (!token || !userData?._id) return;
+
+      const response = await fetch(
+        `http://192.168.1.7:7798/user-lounge-bookings/${userData._id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Lounges: ${response.status}: ${errorText}`);
+      }
+  
+      const data = await response.json();
+      setLoungeBookings(data);
+    } catch (error) {
+      console.error('Lounge booking error:', error);
+      setError(error.message);
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, lounges: false }));
+    }
+  };
+
+  const fetchVehicleBookings = async () => {
+    try {
+      setLoadingBookings(prev => ({ ...prev, vehicles: true }));
+      setError(null);
+      
+      if (!token || !userData?._id) return;
+
+      const response = await fetch(
+        `http://192.168.1.7:7798/user-vehicle-bookings/${userData._id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Vehicles: ${response.status}: ${errorText}`);
+      }
+  
+      const data = await response.json();
+      setVehicleBookings(data);
+    } catch (error) {
+      console.error('Vehicle booking error:', error);
+      setError(error.message);
+    } finally {
+      setLoadingBookings(prev => ({ ...prev, vehicles: false }));
+    }
+  };
+
+  const fetchAllBookings = async () => {
+    await Promise.all([
+      fetchParkingBookings(),
+      fetchFlightBookings(),
+      fetchHotelBookings(),
+      fetchLoungeBookings(),
+      fetchVehicleBookings()
+    ]);
+  };
 
   useEffect(() => {
+    const fetchData = async () => {
+      await fetchUserDetails();
+    };
+    fetchData();
+  }, []);
+  
+  useEffect(() => {
     if (userData?._id) {
-      fetchParkingBookings();
+      fetchAllBookings();
     }
   }, [userData?._id]);
 
@@ -83,10 +249,37 @@ const UserProfilePage = ({ navigation }) => {
     });
   };
 
-  const handleCancelBooking = async (bookingId) => {
+  const handleCancelBooking = async (bookingId, type) => {
     try {
+      if (!token) {
+        alert('Session expired. Please login again.');
+        navigation.navigate('Login');
+        return;
+      }
+
+      let endpoint = '';
+      switch(type) {
+        case 'parking':
+          endpoint = `cancel-parking-reservation/${bookingId}`;
+          break;
+        case 'flight':
+          endpoint = `cancel-flight-booking/${bookingId}`;
+          break;
+        case 'hotel':
+          endpoint = `cancel-hotel-booking/${bookingId}`;
+          break;
+        case 'lounge':
+          endpoint = `cancel-lounge-booking/${bookingId}`;
+          break;
+        case 'vehicle':
+          endpoint = `cancel-vehicle-booking/${bookingId}`;
+          break;
+        default:
+          throw new Error('Invalid booking type');
+      }
+
       const response = await fetch(
-        `http://192.168.1.7:7798/cancel-parking-reservation/${bookingId}`,
+        `http://192.168.1.7:7798/${endpoint}`,
         {
           method: 'DELETE',
           headers: {
@@ -97,15 +290,23 @@ const UserProfilePage = ({ navigation }) => {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Failed to cancel booking: ${errorText}`);
       }
 
-      // Refresh bookings after successful cancellation
-      fetchParkingBookings();
+      fetchAllBookings();
+      alert('Booking cancelled successfully!');
     } catch (error) {
       console.error('Error cancelling booking:', error);
-      alert('Failed to cancel booking. Please try again later.');
+      alert(error.message.includes('Network request failed') 
+        ? 'Network error. Please check your internet connection.'
+        : 'Failed to cancel booking. Please try again later.');
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    fetchAllBookings();
   };
 
   if (loading) {
@@ -127,6 +328,15 @@ const UserProfilePage = ({ navigation }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
             <Ionicons name="person-circle-outline" size={80} color="#D1A7F7" />
@@ -148,7 +358,7 @@ const UserProfilePage = ({ navigation }) => {
         {/* Airport Parking Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Airport Parking</Text>
-          {loadingBookings ? (
+          {loadingBookings.parking ? (
             <View style={styles.card}>
               <ActivityIndicator size="small" color="#D1A7F7" />
             </View>
@@ -162,7 +372,7 @@ const UserProfilePage = ({ navigation }) => {
                 <View style={styles.cardItem}>
                   <Text style={styles.cardLabel}>Spot Number:</Text>
                   <Text style={styles.cardValue}>
-                    {booking.spot?.terminalLocation}{booking.spot?.number}
+                    {booking.spot ? `${booking.spot.terminalLocation}${booking.spot.number}` : 'N/A'}
                   </Text>
                 </View>
                 <View style={styles.cardItem}>
@@ -187,7 +397,7 @@ const UserProfilePage = ({ navigation }) => {
                 </View>
                 <TouchableOpacity 
                   style={styles.cancelButton}
-                  onPress={() => handleCancelBooking(booking._id)}
+                  onPress={() => handleCancelBooking(booking._id, 'parking')}
                 >
                   <Text style={styles.cancelButtonText}>Cancel Booking</Text>
                 </TouchableOpacity>
@@ -196,40 +406,196 @@ const UserProfilePage = ({ navigation }) => {
           )}
         </View>
 
-        {/* Other sections... */}
-        {renderSection('Active Flights', [
-          'Airline:',
-          'Flight Number:',
-          'Departure:',
-          'Destination:'
-        ])}
+        {/* Flight Bookings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Flight Bookings</Text>
+          {loadingBookings.flights ? (
+            <View style={styles.card}>
+              <ActivityIndicator size="small" color="#D1A7F7" />
+            </View>
+          ) : flightBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.noBookingsText}>No active flight bookings</Text>
+            </View>
+          ) : (
+            flightBookings.map((booking) => (
+              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Flight:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.flightId?.airline || 'N/A'} {booking.flightId?.flightNumber || ''}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Route:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.flightId?.from || 'N/A'} → {booking.flightId?.to || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Date:</Text>
+                  <Text style={styles.cardValue}>
+                    {new Date(booking.flightId?.date).toLocaleDateString() || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Time:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.flightId?.time || 'N/A'} - {booking.flightId?.arrivalTime || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Class:</Text>
+                  <Text style={styles.cardValue}>{booking.flightId?.flightClass || 'N/A'}</Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Seat:</Text>
+                  <Text style={styles.cardValue}>{booking.seatNumber || 'N/A'}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancelBooking(booking._id, 'flight')}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
 
-        {renderSection('Hotel Bookings', [
-          'Hotel Name:',
-          'Check-in:',
-          'Check-out:',
-          'Room Type:'
-        ])}
+        {/* Hotel Bookings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hotel Bookings</Text>
+          {loadingBookings.hotels ? (
+            <View style={styles.card}>
+              <ActivityIndicator size="small" color="#D1A7F7" />
+            </View>
+          ) : hotelBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.noBookingsText}>No active hotel bookings</Text>
+            </View>
+          ) : (
+            hotelBookings.map((booking) => (
+              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Hotel:</Text>
+                  <Text style={styles.cardValue}>{booking.hotelName || 'N/A'}</Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Room Type:</Text>
+                  <Text style={styles.cardValue}>{booking.roomType || 'N/A'}</Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Check-in:</Text>
+                  <Text style={styles.cardValue}>
+                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Price:</Text>
+                  <Text style={styles.cardValue}>${booking.price || 'N/A'}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancelBooking(booking._id, 'hotel')}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Lounge Bookings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Lounge Bookings</Text>
+          {loadingBookings.lounges ? (
+            <View style={styles.card}>
+              <ActivityIndicator size="small" color="#D1A7F7" />
+            </View>
+          ) : loungeBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.noBookingsText}>No active lounge bookings</Text>
+            </View>
+          ) : (
+            loungeBookings.map((booking) => (
+              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Lounge:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.loungeId?.name || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Date:</Text>
+                  <Text style={styles.cardValue}>
+                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Time:</Text>
+                  <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancelBooking(booking._id, 'lounge')}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Vehicle Rental Bookings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Vehicle Rentals</Text>
+          {loadingBookings.vehicles ? (
+            <View style={styles.card}>
+              <ActivityIndicator size="small" color="#D1A7F7" />
+            </View>
+          ) : vehicleBookings.length === 0 ? (
+            <View style={styles.card}>
+              <Text style={styles.noBookingsText}>No active vehicle rentals</Text>
+            </View>
+          ) : (
+            vehicleBookings.map((booking) => (
+              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Vehicle:</Text>
+                  <Text style={styles.cardValue}>
+                    {booking.vehicleId?.name || 'N/A'} ({booking.vehicleId?.type || 'N/A'})
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Date:</Text>
+                  <Text style={styles.cardValue}>
+                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Time:</Text>
+                  <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
+                </View>
+                <View style={styles.cardItem}>
+                  <Text style={styles.cardLabel}>Destination:</Text>
+                  <Text style={styles.cardValue}>{booking.destination || 'N/A'}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => handleCancelBooking(booking._id, 'vehicle')}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel Rental</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </View>
   );
-
-  function renderSection(title, items) {
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <View style={styles.card}>
-          {items.map((item, index) => (
-            <View key={index} style={styles.cardItem}>
-              <Text style={styles.cardLabel}>{item}</Text>
-              <Text style={styles.cardValue}>-</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  }
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -356,6 +722,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#D32F2F',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#D1A7F7',
+    padding: 10,
+    borderRadius: 5,
+    width: 100,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

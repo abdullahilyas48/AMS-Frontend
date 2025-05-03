@@ -24,7 +24,6 @@ const PassengerDetails = () => {
       
       const response = await axios.get(`http://192.168.1.7:7798/passenger-details?${query}`);
       
-      // Handle response according to your backend structure
       if (Array.isArray(response.data)) {
         if (response.data.length > 0) {
           setPassengers(response.data);

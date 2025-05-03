@@ -12,7 +12,6 @@ const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, fetchUserDetails, userEmail } = useAuth();
-  // ✅ only call hook at top level
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -22,7 +21,7 @@ const LoginPage = ({ navigation }) => {
   
     try {
       const response = await axios.post(
-        'http://192.168.1.113:7798/user-login',
+        'http://192.168.1.7:7798/user-login',
         { email: email.trim(), password: password.trim() },
         { timeout: 10000, headers: { 'Content-Type': 'application/json' } }
       );
@@ -32,17 +31,13 @@ const LoginPage = ({ navigation }) => {
       const loginEmail = email.trim();
       const token = response.data.token;
       
-      // Save the token and email in AsyncStorage for future use
       await AsyncStorage.setItem('userToken', token);
       await AsyncStorage.setItem('userEmail', loginEmail);
   
-      // Assuming the login function is used to update context or global state
       await login(token, { email: loginEmail }, 60 * 60 * 1000);
   
-      // Fetch the user details after login
-      fetchUserDetails();  // Calling the function after login
-  
-      // Redirect to UserHome page
+      fetchUserDetails();  
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'UserHome' }],
