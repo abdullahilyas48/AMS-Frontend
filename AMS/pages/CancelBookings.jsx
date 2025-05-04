@@ -9,55 +9,86 @@ import {
   KeyboardAvoidingView,
   Modal,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { ImageBackground } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Component code below
 const CancelBookingPage = () => {
   const [bookingId, setBookingId] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [bookingType, setBookingType] = useState('');
+  const navigation = useNavigation();
 
-  const handleCancel = async () => {
-    if (!bookingId.trim()) {
-      Alert.alert("Error", `Please enter a valid ${bookingType === 'hotel' ? 'Reservation' : 'Booking'} ID.`);
+const handleCancel = async () => {
+  if (!bookingId.trim()) {
+    Alert.alert("Error", `Please enter a valid ${bookingType === 'hotel' ? 'Reservation' : 'Booking'} ID.`);
+    return;
+  }
+
+  setLoading(true);
+
+  let endpoint = '';
+  switch (bookingType) {
+    case 'hotel':
+      endpoint = `http://192.168.1.7:7798/cancel-hotel-booking/${bookingId}`;
+      break;
+    case 'lounge':
+      endpoint = `http://192.168.1.7:7798/cancel-lounge-booking/${bookingId}`;
+      break;
+    case 'rental':
+      endpoint = `http://192.168.1.7:7798/cancel-vehicle-booking/${bookingId}`;
+      break;
+    case 'flight':
+      endpoint = `http://192.168.1.7:7798/cancel-flight-booking/${bookingId}`;
+      break;
+    default:
+      Alert.alert("Error", "Invalid booking type.");
+      setLoading(false);
       return;
-    }
+  }
 
-    setLoading(true);
+  try {
+    const token = await AsyncStorage.getItem('userToken');
 
-    let endpoint = '';
-    switch (bookingType) {
-      case 'hotel':
-        endpoint = `http://192.168.1.7:7798/cancel-hotel-booking/${bookingId}`;
-        break;
-      case 'lounge':
-        endpoint = `http://192.168.1.7:7798/cancel-lounge-booking/${bookingId}`;
-        break;
-      case 'rental':
-        endpoint = `http://192.168.1.7:7798/cancel-vehicle-booking/${bookingId}`;
-        break;
-      case 'flight':
-        endpoint = `http://192.168.1.7:7798/cancel-flight-booking/${bookingId}`;
-        break;
-      default:
-        Alert.alert("Error", "Invalid booking type.");
-        setLoading(false);
-        return;
-    }
+    const response = await axios.delete(endpoint, {
+      headers: bookingType === 'flight' ? { Authorization: `Bearer ${token}` } : undefined
+    });
 
-    try {
-      const response = await axios.delete(endpoint);
-      Alert.alert("✅ Cancelled", response.data.message);
-      setBookingId('');
-    } catch (err) {
-      console.log(err);  
-      const errorMsg = err.response?.data?.error || "Failed to cancel booking.";
-      Alert.alert("❌ Error", errorMsg);
-    }
-  };
+    Alert.alert(
+      "✅ Cancelled",
+      response.data.message,
+      [
+        {
+          text: "OK", onPress: () => {
+            setBookingType('');
+            setBookingId('');
+          }
+        }
+      ]
+    );
+  } catch (err) {
+    console.log(err);
+    const errorMsg = err.response?.data?.error || "Failed to cancel booking.";
+    Alert.alert(
+      "❌ Error",
+      errorMsg,
+      [
+        {
+          text: "OK", onPress: () => {
+            setBookingType('');
+            setBookingId('');
+          }
+        }
+      ]
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <ImageBackground
@@ -67,6 +98,12 @@ const CancelBookingPage = () => {
     >
       <KeyboardAvoidingView style={styles.container} behavior="padding">
         <View style={styles.innerContainer}>
+
+          {/* Back Button */}
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={30} color="#fff" />
+          </TouchableOpacity>
+
           <Text style={styles.heading}>Cancel Your Booking</Text>
 
           <View style={styles.bookingTypeContainer}>
@@ -79,6 +116,7 @@ const CancelBookingPage = () => {
               </Text>
             </TouchableOpacity>
           </View>
+
           <Modal visible={showPicker} transparent animationType="slide">
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
@@ -117,13 +155,11 @@ const CancelBookingPage = () => {
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder={
-                  bookingType === 'hotel'
-                    ? "e.g., 65123abc456def"
-                    : bookingType === 'flight'
-                    ? "e.g., FLT123456"
-                    : "e.g., ABC123456789"
-                }
+                placeholder={bookingType === 'hotel'
+                  ? "e.g., 65123abc456def"
+                  : bookingType === 'flight'
+                  ? "e.g., FLT123456"
+                  : "e.g., ABC123456789"}
                 value={bookingId}
                 onChangeText={setBookingId}
                 autoCapitalize="none"
@@ -136,10 +172,22 @@ const CancelBookingPage = () => {
             onPress={handleCancel}
             disabled={loading}
           >
-            {bookingType === 'flight' ? (
-              <Text style={{ fontSize: 20, marginRight: 8 }}></Text>
-            ) : (
-              <FontAwesome name={bookingType === 'hotel' ? 'hotel' : bookingType === 'lounge' ? 'chair' : 'car'} size={20} color="#fff" style={{ marginRight: 8 }} />
+            {/* Show icon if bookingType is selected */}
+            {bookingType !== '' && (
+              <FontAwesome
+                name={
+                  bookingType === 'hotel'
+                    ? 'hotel'
+                    : bookingType === 'lounge'
+                    ? 'chair'
+                    : bookingType === 'rental'
+                    ? 'car'
+                    : 'plane'
+                }
+                size={20}
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
             )}
             <Text style={styles.buttonText}>
               {loading
@@ -259,6 +307,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: -250,
+    left: 4,
+    backgroundColor: '#A26AFF',
+    padding: 10,
+    borderRadius: 20,
+    zIndex: 10,
   },
 });
 

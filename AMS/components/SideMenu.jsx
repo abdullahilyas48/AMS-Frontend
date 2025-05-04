@@ -9,7 +9,6 @@ export default function SideMenu() {
   const menuItems = [
     { title: 'User Profile', screen: 'UserProfile' },
     { title: 'Reschedule Flight', screen: 'RescheduleFlight' },
-    { title: 'Cancel Flight', screen: 'CancelFlight' },
     { title: 'Check Flight Status', screen: 'TrackFlightStatus' },
     { title: 'Smart Parking', screen: 'SmartParking' }, 
     { title: 'Currency Converter', screen: 'CurrencyConverter' },

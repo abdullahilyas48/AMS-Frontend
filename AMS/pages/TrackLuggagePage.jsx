@@ -43,13 +43,16 @@ export default function TrackLuggagePage() {
   };
 
   const getStatusColor = () => {
-    if (!status) return '#6b7280';
-    if (status.toLowerCase().includes('delivered')) return '#10b981';
-    if (status.toLowerCase().includes('transit')) return '#3b82f6';
-    if (status.toLowerCase().includes('lost')) return '#ef4444';
-    return '#6b7280';
+    if (!status) return '#6b7280'; 
+    const normalizedStatus = status.toLowerCase();
+    if (normalizedStatus.includes('checked in')) return '#0ea5e9'; // sky blue
+    if (normalizedStatus.includes('loaded')) return '#6366f1'; // indigo
+    if (normalizedStatus.includes('in transit')) return '#3b82f6'; // blue
+    if (normalizedStatus.includes('claimed')) return '#10b981'; // green
+    if (normalizedStatus.includes('missing') || normalizedStatus.includes('lost')) return '#ef4444'; // red
+  
+    return '#6b7280'; 
   };
-
   return (
     <View style={styles.container}>
       {/* Back Button */}

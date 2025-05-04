@@ -1,45 +1,42 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View, Text, TextInput, FlatList, StyleSheet,
+  TouchableOpacity, Dimensions, ActivityIndicator, ImageBackground
+} from 'react-native';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
 
-const PassengerDetails = () => {
-  const [filterType, setFilterType] = useState('date');
+const { width } = Dimensions.get('window');
+
+const PassengerDetails = ({ navigation }) => {
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [flightNumber, setFlightNumber] = useState('');
   const [passengers, setPassengers] = useState([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchPassengerDetails = async () => {
     setError(null);
     setLoading(true);
-    
     try {
-      const formattedDate = date.toISOString().split('T')[0];
-      const query = filterType === 'date' 
-        ? `date=${formattedDate}` 
-        : `flightNumber=${flightNumber.trim()}`;
-      
+      const params = [];
+      if (flightNumber.trim()) params.push(`flightNumber=${flightNumber.trim()}`);
+      if (date) params.push(`bookedAt=${date.toISOString().split('T')[0]}`);
+      const query = params.join('&');
+
       const response = await axios.get(`http://192.168.1.7:7798/passenger-details?${query}`);
-      
       if (Array.isArray(response.data)) {
-        if (response.data.length > 0) {
-          setPassengers(response.data);
-        } else {
-          setPassengers([]);
-          setError('No passengers found');
-        }
-      } else if (response.data.message) {
-        setPassengers([]);
-        setError(response.data.message);
+        setPassengers(response.data);
+        if (response.data.length === 0) setError('No passengers found for the selected criteria.');
       } else {
-        throw new Error('Unexpected response format');
+        setPassengers([]);
+        setError('Unexpected response format');
       }
-    } catch (error) {
-      console.error('Error:', error.response?.data || error.message);
-      setError(error.response?.data?.error || 'Failed to fetch passenger details');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch passenger details');
       setPassengers([]);
     } finally {
       setLoading(false);
@@ -47,190 +44,220 @@ const PassengerDetails = () => {
   };
 
   useEffect(() => {
-    if ((filterType === 'date') || (filterType === 'flightNumber' && flightNumber.trim())) {
-      fetchPassengerDetails();
-    }
-  }, [filterType, date, flightNumber]);
+    fetchPassengerDetails();
+  }, [date, flightNumber]);
 
-  const renderPassenger = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.passengerName || 'N/A'}</Text>
-      <Text style={styles.cell}>
-        {item.departure?.location || 'N/A'}, {item.departure?.time || 'N/A'}
-      </Text>
-      <Text style={styles.cell}>
-        {item.arrival?.location || 'N/A'}, {item.arrival?.time || 'N/A'}
-      </Text>
-      <Text style={styles.cell}>{item.seatNumber || 'N/A'}</Text>
+  const formatDateTime = (str) => {
+    if (!str) return 'N/A';
+    const d = new Date(str);
+    return isNaN(d) ? 'N/A' : `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+  };
+
+  const renderPassengerCard = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.name}>{item.passengerName || 'Unnamed'}</Text>
+        <Text style={styles.seat}>{item.seatNumber || 'N/A'}</Text>
+      </View>
+      <View style={styles.routeRow}>
+        <View style={styles.routeBox}>
+          <Text style={styles.routeTime}>{item.departure?.time || 'N/A'}</Text>
+          <Text style={styles.routePlace}>{item.departure?.location || 'N/A'}</Text>
+        </View>
+        <View style={styles.iconBox}>
+          <Ionicons name="airplane" size={20} color="#ffffffcc" />
+        </View>
+        <View style={styles.routeBox}>
+          <Text style={styles.routeTime}>{item.arrival?.time || 'N/A'}</Text>
+          <Text style={styles.routePlace}>{item.arrival?.location || 'N/A'}</Text>
+        </View>
+      </View>
     </View>
   );
 
+  const clearFilters = () => {
+    setDate(new Date());
+    setFlightNumber('');
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Passenger Details</Text>
-
-      <View style={styles.filters}>
-        <TouchableOpacity
-          style={[styles.button, filterType === 'date' && styles.activeButton]}
-          onPress={() => setFilterType('date')}
-        >
-          <Text style={styles.buttonText}>By Date</Text>
+    <ImageBackground
+  source={require('../assets/AdminBg.png')}
+  style={styles.container}
+  resizeMode="cover"
+>
+  <View style={styles.overlay}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, filterType === 'flightNumber' && styles.activeButton]}
-          onPress={() => setFilterType('flightNumber')}
-        >
-          <Text style={styles.buttonText}>By Flight Number</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerText}>Passenger Details</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      {filterType === 'date' ? (
-        <TouchableOpacity 
-          onPress={() => setShowDatePicker(true)} 
-          style={styles.datePickerButton}
-        >
-          <Text>Select Date: {date.toDateString()}</Text>
+      <View style={styles.filterRow}>
+        <TouchableOpacity style={styles.filterInput} onPress={() => setShowDatePicker(true)}>
+          <Ionicons name="calendar" size={16} color="#fff" />
+          <Text style={styles.filterText}>{date.toDateString()}</Text>
         </TouchableOpacity>
-      ) : (
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Flight Number"
-          value={flightNumber}
-          onChangeText={setFlightNumber}
-          autoCapitalize="characters"
-        />
-      )}
+        <View style={styles.filterInput}>
+          <Ionicons name="search" size={16} color="#fff" />
+          <TextInput
+            placeholder="Flight No."
+            value={flightNumber}
+            onChangeText={setFlightNumber}
+            style={styles.filterTextInput}
+            placeholderTextColor="#ccc"
+          />
+        </View>
+        <TouchableOpacity onPress={clearFilters} style={styles.clearBtn}>
+          <Ionicons name="close-circle" size={18} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {showDatePicker && (
         <DateTimePicker
           value={date}
           mode="date"
           display="default"
-          onChange={(event, selectedDate) => {
+          onChange={(e, selectedDate) => {
             setShowDatePicker(false);
             if (selectedDate) setDate(selectedDate);
           }}
         />
       )}
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-      ) : (
-        <>
-          <View style={styles.tableHeader}>
-            <Text style={styles.headerCell}>Passenger</Text>
-            <Text style={styles.headerCell}>Departure</Text>
-            <Text style={styles.headerCell}>Arrival</Text>
-            <Text style={styles.headerCell}>Seat</Text>
-          </View>
-
+      <View style={styles.content}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#fff" />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
           <FlatList
             data={passengers}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderPassenger}
-            ListEmptyComponent={
-              !loading && <Text style={styles.emptyText}>No passengers found</Text>
-            }
+            keyExtractor={(item) => item._id || Math.random().toString()}
+            renderItem={renderPassengerCard}
+            contentContainerStyle={{ paddingBottom: 30 }}
           />
-        </>
-      )}
-    </View>
+        )}
+      </View>
+      </View>
+      </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
+  },
+  header: {
+    backgroundColor: '#7e57c2', // updated to a readable purple
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 20,
-    color: '#333',
-  },
-  filters: {
+  backBtn: { padding: 5 },
+  headerText: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  filterRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
+    alignItems: 'center',
+    margin: 15,
+    marginTop: 20,
+    justifyContent: 'space-between',
   },
-  button: {
+  filterInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    width: width * 0.38,
+  },
+  filterText: { marginLeft: 6, color: '#fff', fontSize: 14 },
+  filterTextInput: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#fff',
+    flex: 1,
+  },
+  clearBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    minWidth: 120,
+    borderRadius: 50,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  activeButton: {
-    backgroundColor: '#6200ee',
-  },
-  buttonText: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  input: {
-    padding: 12,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  datePickerButton: {
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#6200ee',
-    paddingVertical: 12,
-    marginTop: 10,
-    borderRadius: 8,
-  },
-  headerCell: {
+  content: {
     flex: 1,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: 'white',
-  },
-  row: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingVertical: 12,
-    marginBottom: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  cell: {
-    flex: 1,
-    textAlign: 'center',
-    color: '#333',
+    paddingTop: 10,
+    paddingHorizontal: 16,
   },
   errorText: {
-    color: 'red',
     textAlign: 'center',
-    marginVertical: 10,
+    color: '#ffcccc',
+    fontSize: 16,
+    marginTop: 40,
   },
-  loader: {
-    marginTop: 50,
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // less transparent
+    borderRadius: 15,
+    marginBottom: 15,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  emptyText: {
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.2)',
+    paddingBottom: 8,
+  },
+  name: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  seat: {
+    fontSize: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    color: '#fff',
+  },
+  routeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  routeBox: {
+    alignItems: 'center',
+    width: width * 0.35,
+  },
+  routeTime: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  routePlace: {
+    fontSize: 14,
+    color: '#eee',
+    marginTop: 4,
     textAlign: 'center',
-    marginTop: 20,
-    color: '#666',
   },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // adjust the opacity to your liking (0.3–0.5 is good)
+  },
+  
+  iconBox: { width: width * 0.1, alignItems: 'center' },
 });
 
 export default PassengerDetails;

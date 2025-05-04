@@ -1,30 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';   
+import { View, Text, Alert, TouchableOpacity, StyleSheet, ScrollView, ImageBackground, ActivityIndicator } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import PriceRangeSelector from '../components/PriceRangeSelector';
 import DateSelector from '../components/DateSelector';
 import PrimaryButton from '../components/PrimaryButton';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import useAuth from '../hooks/useAuth';
+import { useNavigation } from '@react-navigation/native';
 
 const HotelBookingPage = () => {
   const { isAuthenticated, userData } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [date, setDate] = useState(new Date());
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);  // Track loading state
+  const [error, setError] = useState(null);  // Track errors
+  const navigation = useNavigation(); // <-- this is missing
+
 
   useEffect(() => {
     fetchAvailableRooms();
   }, [priceRange]);
 
   const fetchAvailableRooms = async () => {
+    setIsLoading(true);
+    setError(null);  // Clear previous errors if any
     try {
       const response = await axios.get(`http://192.168.1.7:7798/hotel-rooms?minPrice=${priceRange[0]}&maxPrice=${priceRange[1]}`);
       setRooms(response.data);
     } catch (err) {
-      Alert.alert("Error", "Failed to fetch hotel rooms.");
+      setError('Failed to fetch hotel rooms. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,7 +73,7 @@ const HotelBookingPage = () => {
         `Reservation ID: ${booking._id}\nHotel: ${booking.hotelName}\nRoom Type: ${booking.roomType}\nPrice: Rs. ${booking.price}\nDate: ${booking.date}`
       );
 
-      fetchAvailableRooms();
+      fetchAvailableRooms();  // Refresh available rooms after booking
     } catch (error) {
       console.error("Booking error:", error.response?.data || error.message);
       Alert.alert("Booking Failed", error.response?.data?.error || "An error occurred.");
@@ -72,6 +82,16 @@ const HotelBookingPage = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ImageBackground
+        source={require('../assets/airplane.png')}
+        style={[styles.headerImage, { marginTop: -30 }]}
+        imageStyle={{ resizeMode: 'cover', borderBottomLeftRadius: 50, borderBottomRightRadius: 50 }}
+      >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={30} color="#fff" />
+        </TouchableOpacity>
+      </ImageBackground>
+
       <View style={styles.container}>
         <Text style={styles.heading}>Book a Hotel Room</Text>
 
@@ -100,24 +120,38 @@ const HotelBookingPage = () => {
           <FontAwesome name={dropdownVisible ? "chevron-up" : "chevron-down"} size={16} color="#000" />
         </TouchableOpacity>
 
-        {dropdownVisible && (
-          <View style={styles.dropdownList}>
-            {rooms.length === 0 ? (
-              <Text style={styles.blackText}>No rooms available in this price range.</Text>
-            ) : (
-              rooms.map((room) => (
-                <TouchableOpacity
-                  key={room._id}
-                  style={styles.dropdownItem}
-                  onPress={() => handleRoomSelect(room)}
-                >
-                  <Text style={styles.blackText}>
-                    {`${room.hotelName} - ${room.roomType} (Rs. ${room.price})`}
-                  </Text>
-                </TouchableOpacity>
-              ))
-            )}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4B0082" />
+            <Text style={styles.blackText}>Loading rooms...</Text>
           </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.blackText}>{error}</Text>
+            <TouchableOpacity onPress={fetchAvailableRooms} style={styles.retryButton}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          dropdownVisible && (
+            <View style={styles.dropdownList}>
+              {rooms.length === 0 ? (
+                <Text style={styles.blackText}>No rooms available in this price range.</Text>
+              ) : (
+                rooms.map((room) => (
+                  <TouchableOpacity
+                    key={room._id}
+                    style={styles.dropdownItem}
+                    onPress={() => handleRoomSelect(room)}
+                  >
+                    <Text style={styles.blackText}>
+                      {`${room.hotelName} - ${room.roomType} (Rs. ${room.price})`}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </View>
+          )
         )}
 
         <PrimaryButton
@@ -133,35 +167,48 @@ const HotelBookingPage = () => {
 
 const styles = StyleSheet.create({
   scrollContainer: {
+    width: '100%', 
     flexGrow: 1,
     backgroundColor: '#E5D4ED',
     paddingVertical: 30,
     alignItems: 'center',
   },
-  container: {
-    marginTop: 150,
+  headerImage: {
+    width: '107%',
+    height: 300,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     padding: 20,
-    backgroundColor: '#F4E8FF',
-    borderRadius: 16,
+  },
+  backButton: {
+    marginTop: 40,
+    right: -15,
+  },
+  container: {
+    width: '95%',
+    marginTop: -18,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    marginHorizontal: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
-    width: '90%',
-    minHeight: 500,
+    height: 800,
   },
   heading: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#5D3FD3',
+    fontWeight: 'bold',
+    color: '#4B0082',
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#000', 
     marginTop: 20,
     marginBottom: 6,
   },
@@ -175,12 +222,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderRadius: 10,
-    backgroundColor: '#F4F0FB',
+    backgroundColor: '#E0D3F5',
     borderColor: '#C7B8EC',
     borderWidth: 1,
+    marginBottom: 20,
   },
   dropdownList: {
-    backgroundColor: '#F4F0FB',
+    backgroundColor: '#E0D3F5',
     borderWidth: 1,
     borderColor: '#C7B8EC',
     borderRadius: 10,
@@ -192,6 +240,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 0.8,
     borderBottomColor: '#D6CCF1',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  retryButton: {
+    backgroundColor: '#4B0082',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  retryText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

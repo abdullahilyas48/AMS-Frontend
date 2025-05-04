@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, ImageBackground } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import LogoutModal from '../components/LogoutModal';
 
@@ -28,71 +28,82 @@ const AdminDashboardPage = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerButtonPlaceholder} />
-        <Text style={styles.headerText}>Admin Dashboard</Text>
-        <TouchableOpacity onPress={() => setLogoutVisible(true)} style={styles.headerButton}>
-          <Ionicons name="log-out-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.welcomeText}>Welcome back, Admin</Text>
-        <Text style={styles.subtitle}>Manage your airline operations</Text>
-        
-        {/* Top Row - Small Cards */}
-        <View style={styles.cardRow}>
-          <DashboardCard 
-            icon="plane" 
-            title="Flight Information" 
-            onPress={() => navigation.navigate('FlightInformation')}
-          />
-          <DashboardCard 
-            icon="users" 
-            title="Passenger Details" 
-            onPress={() => navigation.navigate('PassengerDetails')}
-          />
-        </View>
-        
-        {/* Full-width Staff Management Card */}
-        <View style={styles.fullWidthCard}>
-          <TouchableOpacity 
-            style={[styles.card, styles.staffCard]} 
-            onPress={() => navigation.navigate('StaffDashboard')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.staffCardContent}>
-              <View style={styles.staffIconContainer}>
-                <MaterialIcons name="people-alt" size={32} color="#fff" />
-              </View>
-              <View style={styles.staffTextContainer}>
-                <Text style={styles.staffCardTitle}>Staff Management</Text>
-                <Text style={styles.staffCardSubtitle}>
-                  Manage all staff members, roles, schedules and permissions
-                </Text>
-              </View>
-            </View>
+    <ImageBackground 
+      source={require('../assets/AdminBg.png')} // Update the path as needed
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerButtonPlaceholder} />
+          <Text style={styles.headerText}>Admin Dashboard</Text>
+          <TouchableOpacity onPress={() => setLogoutVisible(true)} style={styles.headerButton}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-      </ScrollView>
 
-      {/* Logout Modal */}
-      <LogoutModal
-        visible={logoutVisible}
-        onLogout={handleLogoutConfirm}
-        onCancel={() => setLogoutVisible(false)}
-      />
-    </View>
+        {/* Content */}
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.welcomeText}>Welcome back, Admin</Text>
+          <Text style={styles.subtitle}>Manage your airline operations</Text>
+          
+          {/* Top Row - Small Cards */}
+          <View style={styles.cardRow}>
+            <DashboardCard 
+              icon="plane" 
+              title="Flight Information" 
+              onPress={() => navigation.navigate('FlightInformation')}
+            />
+            <DashboardCard 
+              icon="users" 
+              title="Passenger Details" 
+              onPress={() => navigation.navigate('PassengerDetails')}
+            />
+          </View>
+          
+          {/* Full-width Staff Management Card */}
+          <View style={styles.fullWidthCard}>
+            <TouchableOpacity 
+              style={[styles.card, styles.staffCard]} 
+              onPress={() => navigation.navigate('StaffDashboard')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.staffCardContent}>
+                <View style={styles.staffIconContainer}>
+                  <MaterialIcons name="people-alt" size={32} color="#fff" />
+                </View>
+                <View style={styles.staffTextContainer}>
+                  <Text style={styles.staffCardTitle}>Staff Management</Text>
+                  <Text style={styles.staffCardSubtitle}>
+                    Manage all staff members, roles, schedules and permissions
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        {/* Logout Modal */}
+        <LogoutModal
+          visible={logoutVisible}
+          onLogout={handleLogoutConfirm}
+          onCancel={() => setLogoutVisible(false)}
+        />
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Slightly less opaque for better gradient reveal
   },
   header: {
     flexDirection: 'row',
@@ -101,13 +112,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: '#8d56aa',
+    backgroundColor: 'rgba(30, 0, 60, 0.7)',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 8,
   },
   headerButton: {
@@ -129,13 +140,19 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: '#fff',
     marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#eee',
     marginBottom: 25,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   cardRow: {
     flexDirection: 'row',
@@ -145,19 +162,21 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.43,
-    borderRadius: 15,
+    borderRadius: 20,
     padding: 20,
-    backgroundColor: '#9c64b5',
-    shadowColor: '#8d56aa',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -170,6 +189,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   fullWidthCard: {
     width: '100%',
@@ -177,15 +199,18 @@ const styles = StyleSheet.create({
   },
   staffCard: {
     width: '100%',
-    backgroundColor: '#7d4a9a',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   staffCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   staffIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -201,10 +226,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   staffCardSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#ddd',
   },
 });
 

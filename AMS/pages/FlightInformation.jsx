@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity, 
-  ScrollView, Dimensions, FlatList
+  Dimensions, FlatList, ImageBackground
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
@@ -78,63 +78,79 @@ export default function FlightInformation({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Flight Information</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+    <ImageBackground
+      source={require('../assets/AdminBg.png')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.overlayBackground} />
 
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Search Filters */}
-        <View style={styles.filterContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Date (YYYY-MM-DD)"
-            value={date}
-            onChangeText={setDate}
-            placeholderTextColor="#999"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Flight Number"
-            value={flightNumber}
-            onChangeText={setFlightNumber}
-            placeholderTextColor="#999"
-          />
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Flight Information</Text>
+          <View style={styles.headerPlaceholder} />
         </View>
 
-        {/* Flight Cards */}
-        {flights.length === 0 ? (
-          <View style={styles.noFlightsContainer}>
-            <Text style={styles.noFlights}>No flights found</Text>
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Search Filters */}
+          <View style={styles.filterContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Date (YYYY-MM-DD)"
+              value={date}
+              onChangeText={setDate}
+              placeholderTextColor="#555"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Flight Number"
+              value={flightNumber}
+              onChangeText={setFlightNumber}
+              placeholderTextColor="#555"
+            />
           </View>
-        ) : (
-          <FlatList
-            data={flights}
-            renderItem={renderFlightCard}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={styles.listContent}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-          />
-        )}
+
+          {/* Flight Cards */}
+          {flights.length === 0 ? (
+            <View style={styles.noFlightsContainer}>
+              <Text style={styles.noFlights}>No flights found</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={flights}
+              renderItem={renderFlightCard}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={styles.listContent}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+            />
+          )}
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  overlay: {
+    flex: 1,
+    position: 'relative',
+  },
+  overlayBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // darker background for contrast
+    zIndex: -1,
   },
   header: {
     flexDirection: 'row',
@@ -152,11 +168,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  content: {
-    flex: 1,
-    backgroundColor: '#f0e6f5', 
-    paddingBottom: 20,
-  },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -168,6 +179,10 @@ const styles = StyleSheet.create({
   headerPlaceholder: {
     width: 30,
   },
+  content: {
+    flex: 1,
+    paddingBottom: 20,
+  },
   filterContainer: {
     padding: 20,
     paddingBottom: 10,
@@ -175,32 +190,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: 10,
     padding: 12,
     flex: 1,
     marginHorizontal: 5,
+    color: '#000',
+    fontWeight: '600',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    color: '#333',
   },
   listContent: {
     paddingHorizontal: 20,
   },
   flightCard: {
-    width: width - 40,
-    backgroundColor: '#fff',
-    borderRadius: 15,
+    width: width - 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 1,
+    borderRadius: 20,
     padding: 20,
     marginRight: 20,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -208,17 +227,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
     paddingBottom: 10,
   },
   flightNumber: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5a2d7a',
+    color: '#ffffff',
   },
   airline: {
     fontSize: 16,
-    color: '#666',
+    color: '#f0e6f6',
   },
   routeContainer: {
     flexDirection: 'row',
@@ -233,11 +252,11 @@ const styles = StyleSheet.create({
   routeTime: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
   },
   routeAirport: {
     fontSize: 14,
-    color: '#666',
+    color: '#ddd',
     marginTop: 5,
   },
   durationContainer: {
@@ -246,12 +265,12 @@ const styles = StyleSheet.create({
   durationLine: {
     height: 1,
     width: width * 0.2,
-    backgroundColor: '#8d56aa',
+    backgroundColor: '#e0c6f5',
     marginVertical: 5,
   },
   durationText: {
     fontSize: 12,
-    color: '#8d56aa',
+    color: '#e0c6f5',
   },
   detailsContainer: {
     marginTop: 10,
@@ -263,12 +282,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#e0d6ec',
     fontWeight: 'bold',
   },
   detailValue: {
     fontSize: 14,
-    color: '#333',
+    color: '#ffffff',
   },
   noFlightsContainer: {
     flex: 1,
@@ -277,6 +296,6 @@ const styles = StyleSheet.create({
   },
   noFlights: {
     fontSize: 16,
-    color: '#888',
+    color: '#ccc',
   },
 });

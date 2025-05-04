@@ -1,62 +1,72 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ImageBackground } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 
 export default function StaffDashboard({ navigation }) {
   return (
-    <View style={styles.container}>
-      {/* Header with Back Button */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.navigate('AdminDashboard')} // <-- Changed here
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Staff Dashboard</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>Staff Management</Text>
-        <Text style={styles.subtitle}>Manage your team and schedules</Text>
-        
-        {/* Centered Card Row */}
-        <View style={styles.centeredCardRow}>
-          {/* Staff Schedule Card */}
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('StaffSchedule')}
+    <ImageBackground
+      source={require('../assets/AdminBg.png')} // ✅ Updated here
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.navigate('AdminDashboard')}
           >
-            <View style={styles.cardIconContainer}>
-              <Ionicons name="calendar-outline" size={28} color="#fff" />
-            </View>
-            <Text style={styles.cardTitle}>Staff Schedule</Text>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
+          <Text style={styles.headerText}>Staff Dashboard</Text>
+          <View style={styles.headerPlaceholder} />
+        </View>
 
-          {/* Assign Duties Card */}
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('DutyAssignment')}
-          >
-            <View style={styles.cardIconContainer}>
-              <FontAwesome5 name="user-check" size={24} color="#fff" />
-            </View>
-            <Text style={styles.cardTitle}>Assign Duties</Text>
-          </TouchableOpacity>
+        {/* Content */}
+        <View style={styles.content}>
+          <Text style={styles.welcomeText}>Staff Management</Text>
+          <Text style={styles.subtitle}>Manage your team and schedules</Text>
+
+          <View style={styles.centeredCardRow}>
+            {/* Staff Schedule */}
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('StaffSchedule')}
+            >
+              <View style={styles.cardIconContainer}>
+                <Ionicons name="calendar-outline" size={28} color="#fff" />
+              </View>
+              <Text style={styles.cardTitle}>Staff Schedule</Text>
+            </TouchableOpacity>
+
+            {/* Assign Duties */}
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('DutyAssignment')}
+            >
+              <View style={styles.cardIconContainer}>
+                <FontAwesome5 name="user-check" size={24} color="#fff" />
+              </View>
+              <Text style={styles.cardTitle}>Assign Duties</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   header: {
     flexDirection: 'row',
@@ -65,13 +75,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: '#8d56aa',
+    backgroundColor: 'rgba(30, 0, 60, 0.7)',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 8,
   },
   backButton: {
@@ -88,20 +98,27 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    marginTop: 20
+    paddingBottom: 40,
+    marginTop: 10,
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: '#fff',
     marginBottom: 5,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#eee',
     marginBottom: 40,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   centeredCardRow: {
     flexDirection: 'row',
@@ -115,17 +132,19 @@ const styles = StyleSheet.create({
     height: 160,
     borderRadius: 15,
     padding: 20,
-    backgroundColor: '#9c64b5',
-    shadowColor: '#8d56aa',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -138,5 +157,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });

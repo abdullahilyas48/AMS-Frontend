@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
-  Dimensions, Platform, ScrollView
+  Dimensions, Platform, ScrollView, ImageBackground
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+const backgroundImage = require('../assets/AdminBg.png');
 
 export default function DutyAssignment({ navigation }) {
   const [taskName, setTaskName] = useState('');
@@ -45,148 +47,169 @@ export default function DutyAssignment({ navigation }) {
       });
 
       Alert.alert("Success", "Duty assigned successfully!");
+      clearForm();
     } catch (error) {
       const message = error.response?.data?.error || "Failed to assign duty.";
       Alert.alert("Error", message);
     }
   };
 
+  const clearForm = () => {
+    setTaskName('');
+    setStaffName('');
+    setDate(new Date());
+    setTime(new Date());
+    setTaskDescription('');
+    setFrequency('');
+    setLocation('');
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('StaffDashboard')}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Duty Assignment</Text>
-      </View>
-
-      <View style={styles.formContainer}>
-        <View style={styles.inputRow}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Task Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter task name"
-              value={taskName}
-              onChangeText={setTaskName}
-            />
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Staff Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter staff name"
-              value={staffName}
-              onChangeText={setStaffName}
-            />
-          </View>
-        </View>
-
-        <View style={styles.inputRow}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Date</Text>
+    <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.header}>
             <TouchableOpacity 
-              style={styles.dateInput} 
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => navigation.navigate('StaffDashboard')}
+              style={styles.backButton}
             >
-              <Text>{date.toISOString().split('T')[0]}</Text>
-              <Ionicons name="calendar" size={18} color="#8d56aa" />
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Duty Assignment</Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputRow}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Task Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter task name"
+                  value={taskName}
+                  onChangeText={setTaskName}
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Staff Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter staff name"
+                  value={staffName}
+                  onChangeText={setStaffName}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Date</Text>
+                <TouchableOpacity 
+                  style={styles.dateInput} 
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text>{date.toISOString().split('T')[0]}</Text>
+                  <Ionicons name="calendar" size={18} color="#8d56aa" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Time</Text>
+                <TouchableOpacity 
+                  style={styles.dateInput}
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <Text>{time.toTimeString().split(' ')[0]}</Text>
+                  <Ionicons name="time" size={18} color="#8d56aa" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.fullWidthInputContainer}>
+              <Text style={styles.label}>Task Description</Text>
+              <TextInput
+                style={styles.fullWidthTextArea}
+                placeholder="Task Description"
+                multiline
+                numberOfLines={4}
+                value={taskDescription}
+                onChangeText={setTaskDescription}
+              />
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Frequency</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="daily/weekly/monthly"
+                  value={frequency}
+                  onChangeText={(text) => setFrequency(text.toLowerCase())}
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Location</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter location"
+                  value={location}
+                  onChangeText={setLocation}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.submitButton} onPress={handleAssign}>
+              <Text style={styles.submitButtonText}>Assign Duty</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.clearButton} onPress={clearForm}>
+              <Text style={styles.clearButtonText}>Clear Form</Text>
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Time</Text>
-            <TouchableOpacity 
-              style={styles.dateInput}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text>{time.toTimeString().split(' ')[0]}</Text>
-              <Ionicons name="time" size={18} color="#8d56aa" />
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        {/* Full-width Task Description */}
-        <View style={styles.fullWidthInputContainer}>
-          <Text style={styles.label}>Task Description</Text>
-          <TextInput
-            style={styles.fullWidthTextArea}
-            placeholder="Task Description"
-            multiline
-            numberOfLines={4}
-            value={taskDescription}
-            onChangeText={setTaskDescription}
-          />
-        </View>
-
-        <View style={styles.inputRow}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Frequency</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="daily/weekly/monthly"
-              value={frequency}
-              onChangeText={(text) => setFrequency(text.toLowerCase())}
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) setDate(selectedDate);
+              }}
             />
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter location"
-              value={location}
-              onChangeText={setLocation}
-            />
-          </View>
-        </View>
+          )}
 
-        <TouchableOpacity 
-          style={styles.submitButton} 
-          onPress={handleAssign}
-        >
-          <Text style={styles.submitButtonText}>Assign Duty</Text>
-        </TouchableOpacity>
+          {showTimePicker && (
+            <DateTimePicker
+              value={time}
+              mode="time"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event, selectedTime) => {
+                setShowTimePicker(false);
+                if (selectedTime) setTime(selectedTime);
+              }}
+            />
+          )}
+        </ScrollView>
       </View>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) setDate(selectedDate);
-          }}
-        />
-      )}
-
-      {showTimePicker && (
-        <DateTimePicker
-          value={time}
-          mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedTime) => {
-            setShowTimePicker(false);
-            if (selectedTime) setTime(selectedTime);
-          }}
-        />
-      )}
-    </ScrollView>
+    </ImageBackground>
   );
 }
 
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
   container: {
     flexGrow: 1,
-    backgroundColor: '#f0e6f5', 
     paddingBottom: 40,
   },
   header: {
@@ -221,77 +244,89 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 20,
+    gap: 15,
   },
   inputRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    gap: 15,
   },
   inputContainer: {
-    width: width * 0.43,
+    flex: 1,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5a2d7a',
+    color: '#f4f0fa',
     marginBottom: 5,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
   },
   dateInput: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
   },
   fullWidthInputContainer: {
     width: '100%',
-    marginBottom: 15,
   },
   fullWidthTextArea: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 12,
     padding: 12,
     height: 100,
-    width: '100%',
     textAlignVertical: 'top',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
   },
   submitButton: {
     backgroundColor: '#8d56aa',
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 16,
     marginTop: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
   },
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  clearButton: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  clearButtonText: {
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: '600',
   },
 });

@@ -21,7 +21,6 @@ import BookFlightPage from './pages/BookFlightPage';
 import RescheduleFlight from './pages/RescheduleFlight';
 import CurrencyConverter from './pages/CurrencyConverter'
 import RewardsScreen from './pages/Rewards';
-import CancelFlight from './pages/CancelFlight'
 import UserProfilePage from './pages/UserProfilePage';
 import SmartParking from './pages/SmartParking';
 import TrackLuggagePage from './pages/TrackLuggagePage';
@@ -75,7 +74,6 @@ export default function App() {
         <Stack.Screen name="RescheduleFlight" component={RescheduleFlight} />
         <Stack.Screen name="CurrencyConverter" component={CurrencyConverter} />
         <Stack.Screen name="Rewards" component={RewardsScreen} />
-        <Stack.Screen name="CancelFlight" component={CancelFlight} />
         <Stack.Screen name="SmartParking" component={SmartParking} />
         <Stack.Screen name="TrackLuggage" component={TrackLuggagePage} />
         <Stack.Screen name="TrackFlightStatus" component={TrackFlightStatusPage} />

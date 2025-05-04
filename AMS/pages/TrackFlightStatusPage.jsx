@@ -4,14 +4,23 @@ import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 
 const airportCoords = {
-  JFK: { latitude: 40.6413, longitude: -73.7781, name: "New York (JFK)" },
-  LHR: { latitude: 51.4700, longitude: -0.4543, name: "London Heathrow" },
-  ISB: { latitude: 33.5499, longitude: 73.1007, name: "Islamabad" },
-  DXB: { latitude: 25.2532, longitude: 55.3657, name: "Dubai" },
-  LAX: { latitude: 33.9416, longitude: -118.4085, name: "Los Angeles" },
+  ISB: {latitude: 33.5499,longitude: 73.1007,name: "Islamabad (ISB)"},
+  JFK: {latitude: 40.6413,longitude: -73.7781,name: "New York (JFK)"},
+  DXB: {latitude: 25.2532,longitude: 55.3657,name: "Dubai (DXB)"},
+  LHR: {latitude: 51.4700,longitude: -0.4543,name: "London Heathrow (LHR)"},
+  LAX: {latitude: 33.9416,longitude: -118.4085,name: "Los Angeles (LAX)"},
+  Tokyo: {latitude: 35.5494,longitude: 139.7798,name: "Tokyo Haneda (HND)"},
+  Chicago: {latitude: 41.9742,longitude: -87.9073,name: "Chicago O'Hare (ORD)"},
+  SFO: {latitude: 37.6213,longitude: -122.3790,name: "San Francisco International (SFO)"},
+  Rome: {latitude: 41.7999,longitude: 12.2462,name: "Rome Fiumicino (FCO)"},
+  Paris: {latitude: 49.0097,longitude: 2.5479,name: "Paris Charles de Gaulle (CDG)"},
+  Singapore: {latitude: 1.3644,longitude: 103.9915,name: "Singapore Changi (SIN)"},
+  Monaco: {latitude: 45.6301,longitude: 8.7237,name: "Milan Malpensa (MXP)"},
+  Nice: {latitude: 43.6653,longitude: 7.2150,name: "Nice Côte d'Azur (NCE) – Monaco"
+  }
 };
 
-const API_BASE_URL = 'http://192.168.1.7:7798'; // Replace with your actual backend URL
+const API_BASE_URL = 'http://192.168.1.7:7798'; 
 
 const TrackFlightStatusPage = ({ navigation }) => {
   const [flightNumber, setFlightNumber] = useState('');

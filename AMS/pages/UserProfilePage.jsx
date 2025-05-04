@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  ActivityIndicator,
+  Animated,
+  Easing,
+  ImageBackground
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import useAuth from '../hooks/useAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +30,24 @@ const UserProfilePage = ({ navigation }) => {
     vehicles: true
   });
   const [error, setError] = useState(null);
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(30))[0];
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
 
   const fetchUserDetails = async () => {
     try {
@@ -312,285 +340,390 @@ const UserProfilePage = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#5E35B1" />
+        <Text style={styles.loadingText}>Loading your profile...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+      <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={handleBack}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color="#5E35B1" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>User Profile</Text>
-      </View>
+        <Text style={styles.headerTitle}>My Profile</Text>
+      </Animated.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {error && (
-          <View style={styles.errorContainer}>
+          <Animated.View style={[styles.errorContainer, { opacity: fadeAnim }]}>
+            <Ionicons name="warning-outline" size={24} color="#D32F2F" />
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+            <TouchableOpacity 
+              style={styles.retryButton} 
+              onPress={handleRetry}
+              activeOpacity={0.7}
+            >
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         )}
 
-        <View style={styles.profileCard}>
+        <Animated.View style={[styles.profileCard, { opacity: fadeAnim }]}>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle-outline" size={80} color="#D1A7F7" />
+            <Ionicons name="person-circle-outline" size={100} color="#5E35B1" />
           </View>
           <Text style={styles.welcomeText}>Welcome back, {userData?.name || 'User'}!</Text>
 
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
-              <Ionicons name="mail-outline" size={18} color="#D1A7F7" />
+              <Ionicons name="mail-outline" size={20} color="#5E35B1" />
               <Text style={styles.infoText}>{userData?.email || 'N/A'}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="ribbon-outline" size={18} color="#D1A7F7" />
-              <Text style={styles.infoText}>Status: {userData?.status || 'N/A'}</Text>
-            </View>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Airport Parking Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Airport Parking</Text>
-          {loadingBookings.parking ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color="#D1A7F7" />
-            </View>
-          ) : parkingBookings.length === 0 ? (
-            <View style={styles.card}>
-              <Text style={styles.noBookingsText}>No active parking bookings</Text>
-            </View>
-          ) : (
-            parkingBookings.map((booking) => (
-              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Spot Number:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.spot ? `${booking.spot.terminalLocation}${booking.spot.number}` : 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Date:</Text>
-                  <Text style={styles.cardValue}>
-                    {new Date(booking.reservationDate).toLocaleDateString()}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Time:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.startTime} - {booking.endTime}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Vehicle:</Text>
-                  <Text style={styles.cardValue}>{booking.vehicleType}</Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>License:</Text>
-                  <Text style={styles.cardValue}>{booking.licensePlate}</Text>
-                </View>
-                <TouchableOpacity 
-                  style={styles.cancelButton}
-                  onPress={() => handleCancelBooking(booking._id, 'parking')}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          )}
-        </View>
 
-        {/* Flight Bookings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Flight Bookings</Text>
+         {/* Flight Bookings Section */}
+         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="airplane-outline" size={24} color="#5E35B1" />
+            <Text style={styles.sectionTitle}>Flight Bookings</Text>
+          </View>
+          
           {loadingBookings.flights ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color="#D1A7F7" />
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#5E35B1" />
             </View>
           ) : flightBookings.length === 0 ? (
-            <View style={styles.card}>
+            <View style={styles.emptyCard}>
+              <Ionicons name="airplane-outline" size={32} color="#B39DDB" />
               <Text style={styles.noBookingsText}>No active flight bookings</Text>
             </View>
           ) : (
             flightBookings.map((booking) => (
-              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Flight:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.flightId?.airline || 'N/A'} {booking.flightId?.flightNumber || ''}
+              <View key={booking._id} style={styles.bookingCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>
+                    {booking.flightId?.airline || 'Flight'} {booking.flightId?.flightNumber || ''}
                   </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#1E88E5' }]}>
+                    <Text style={styles.statusText}>Confirmed</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Route:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.flightId?.from || 'N/A'} → {booking.flightId?.to || 'N/A'}
-                  </Text>
+                
+                <View style={styles.cardContent}>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="swap-horizontal-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Route: </Text>
+                    <Text style={styles.cardValue}>
+                      {booking.flightId?.from || 'N/A'} → {booking.flightId?.to || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="calendar-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Date: </Text>
+                    <Text style={styles.cardValue}>
+                      {new Date(booking.flightId?.date).toLocaleDateString() || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="time-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Time: </Text>
+                    <Text style={styles.cardValue}>
+                      {booking.flightId?.time || 'N/A'} - {booking.flightId?.arrivalTime || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="business-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Class: </Text>
+                    <Text style={styles.cardValue}>{booking.flightId?.flightClass || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="person-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Seat: </Text>
+                    <Text style={styles.cardValue}>{booking.seatNumber || 'N/A'}</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Date:</Text>
-                  <Text style={styles.cardValue}>
-                    {new Date(booking.flightId?.date).toLocaleDateString() || 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Time:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.flightId?.time || 'N/A'} - {booking.flightId?.arrivalTime || 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Class:</Text>
-                  <Text style={styles.cardValue}>{booking.flightId?.flightClass || 'N/A'}</Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Seat:</Text>
-                  <Text style={styles.cardValue}>{booking.seatNumber || 'N/A'}</Text>
-                </View>
+                
                 <TouchableOpacity 
-                  style={styles.cancelButton}
+                  style={[styles.actionButton, { backgroundColor: '#B88BE0' }]}
                   onPress={() => handleCancelBooking(booking._id, 'flight')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                  <Text style={styles.actionButtonText}>Cancel Flight</Text>
                 </TouchableOpacity>
               </View>
             ))
           )}
-        </View>
+        </Animated.View>
+
+        {/* Parking Section */}
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="car-sport-outline" size={24} color="#5E35B1" />
+            <Text style={styles.sectionTitle}>Parking Reservations</Text>
+          </View>
+          
+          {loadingBookings.parking ? (
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#5E35B1" />
+            </View>
+          ) : parkingBookings.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Ionicons name="car-sport-outline" size={32} color="#B39DDB" />
+              <Text style={styles.noBookingsText}>No active parking bookings</Text>
+            </View>
+          ) : (
+            parkingBookings.map((booking) => (
+              <View key={booking._id} style={styles.bookingCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>Parking Reservation</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#43A047' }]}>
+                    <Text style={styles.statusText}>Active</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.cardContent}>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="location-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Spot: </Text>
+                    <Text style={styles.cardValue}>
+                      {booking.spot ? `${booking.spot.terminalLocation}${booking.spot.number}` : 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="calendar-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Date: </Text>
+                    <Text style={styles.cardValue}>
+                      {new Date(booking.reservationDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="time-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Time: </Text>
+                    <Text style={styles.cardValue}>
+                      {booking.startTime} - {booking.endTime}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="car-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Vehicle: </Text>
+                    <Text style={styles.cardValue}>{booking.vehicleType}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="document-text-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>License: </Text>
+                    <Text style={styles.cardValue}>{booking.licensePlate}</Text>
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: '#B88BE0' }]}
+                  onPress={() => handleCancelBooking(booking._id, 'parking')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.actionButtonText}>Cancel Reservation</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </Animated.View>
+
 
         {/* Hotel Bookings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hotel Bookings</Text>
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="bed-outline" size={24} color="#5E35B1" />
+            <Text style={styles.sectionTitle}>Hotel Bookings</Text>
+          </View>
+          
           {loadingBookings.hotels ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color="#D1A7F7" />
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#5E35B1" />
             </View>
           ) : hotelBookings.length === 0 ? (
-            <View style={styles.card}>
+            <View style={styles.emptyCard}>
+              <Ionicons name="bed-outline" size={32} color="#B39DDB" />
               <Text style={styles.noBookingsText}>No active hotel bookings</Text>
             </View>
           ) : (
             hotelBookings.map((booking) => (
-              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Hotel:</Text>
-                  <Text style={styles.cardValue}>{booking.hotelName || 'N/A'}</Text>
+              <View key={booking._id} style={styles.bookingCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>{booking.hotelName || 'Hotel Booking'}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#FB8C00' }]}>
+                    <Text style={styles.statusText}>Booked</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Room Type:</Text>
-                  <Text style={styles.cardValue}>{booking.roomType || 'N/A'}</Text>
+                
+                <View style={styles.cardContent}>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="home-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Room: </Text>
+                    <Text style={styles.cardValue}>{booking.roomType || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="calendar-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Check-in: </Text>
+                    <Text style={styles.cardValue}>
+                      {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="cash-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Price: </Text>
+                    <Text style={styles.cardValue}>${booking.price || 'N/A'}</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Check-in:</Text>
-                  <Text style={styles.cardValue}>
-                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Price:</Text>
-                  <Text style={styles.cardValue}>${booking.price || 'N/A'}</Text>
-                </View>
+                
                 <TouchableOpacity 
-                  style={styles.cancelButton}
+                  style={[styles.actionButton, { backgroundColor: '#B88BE0' }]}
                   onPress={() => handleCancelBooking(booking._id, 'hotel')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                  <Text style={styles.actionButtonText}>Cancel Booking</Text>
                 </TouchableOpacity>
               </View>
             ))
           )}
-        </View>
+        </Animated.View>
 
         {/* Lounge Bookings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lounge Bookings</Text>
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="cafe-outline" size={24} color="#5E35B1" />
+            <Text style={styles.sectionTitle}>Lounge Bookings</Text>
+          </View>
+          
           {loadingBookings.lounges ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color="#D1A7F7" />
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#5E35B1" />
             </View>
           ) : loungeBookings.length === 0 ? (
-            <View style={styles.card}>
+            <View style={styles.emptyCard}>
+              <Ionicons name="cafe-outline" size={32} color="#B39DDB" />
               <Text style={styles.noBookingsText}>No active lounge bookings</Text>
             </View>
           ) : (
             loungeBookings.map((booking) => (
-              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Lounge:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.loungeId?.name || 'N/A'}
+              <View key={booking._id} style={styles.bookingCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>
+                    {booking.loungeId?.name || 'Lounge Booking'}
                   </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#8E24AA' }]}>
+                    <Text style={styles.statusText}>Reserved</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Date:</Text>
-                  <Text style={styles.cardValue}>
-                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
-                  </Text>
+                
+                <View style={styles.cardContent}>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="calendar-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Date: </Text>
+                    <Text style={styles.cardValue}>
+                      {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="time-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Time: </Text>
+                    <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="people-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Guests: </Text>
+                    <Text style={styles.cardValue}>{booking.guests || '1'}</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Time:</Text>
-                  <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
-                </View>
+                
                 <TouchableOpacity 
-                  style={styles.cancelButton}
+                  style={[styles.actionButton, { backgroundColor: '#B88BE0' }]}
                   onPress={() => handleCancelBooking(booking._id, 'lounge')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+                  <Text style={styles.actionButtonText}>Cancel Booking</Text>
                 </TouchableOpacity>
               </View>
             ))
           )}
-        </View>
+        </Animated.View>
 
-        {/* Vehicle Rental Bookings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Vehicle Rentals</Text>
+        {/* Vehicle Rentals Section */}
+        <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="car-outline" size={24} color="#5E35B1" />
+            <Text style={styles.sectionTitle}>Vehicle Rentals</Text>
+          </View>
+          
           {loadingBookings.vehicles ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color="#D1A7F7" />
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#5E35B1" />
             </View>
           ) : vehicleBookings.length === 0 ? (
-            <View style={styles.card}>
+            <View style={styles.emptyCard}>
+              <Ionicons name="car-outline" size={32} color="#B39DDB" />
               <Text style={styles.noBookingsText}>No active vehicle rentals</Text>
             </View>
           ) : (
             vehicleBookings.map((booking) => (
-              <View key={booking._id} style={[styles.card, { marginBottom: 15 }]}>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Vehicle:</Text>
-                  <Text style={styles.cardValue}>
-                    {booking.vehicleId?.name || 'N/A'} ({booking.vehicleId?.type || 'N/A'})
+              <View key={booking._id} style={styles.bookingCard}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>
+                    {booking.vehicleId?.name || 'Vehicle Rental'} ({booking.vehicleId?.type || 'N/A'})
                   </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: '#F4511E' }]}>
+                    <Text style={styles.statusText}>Booked</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Date:</Text>
-                  <Text style={styles.cardValue}>
-                    {new Date(booking.date).toLocaleDateString() || 'N/A'}
-                  </Text>
+                
+                <View style={styles.cardContent}>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="calendar-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Date: </Text>
+                    <Text style={styles.cardValue}>
+                      {new Date(booking.date).toLocaleDateString() || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="time-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Time: </Text>
+                    <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="navigate-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Destination: </Text>
+                    <Text style={styles.cardValue}>{booking.destination || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.cardItem}>
+                    <Ionicons name="cash-outline" size={16} color="#5E35B1" />
+                    <Text style={styles.cardLabel}>Price: </Text>
+                    <Text style={styles.cardValue}>${booking.price || 'N/A'}</Text>
+                  </View>
                 </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Time:</Text>
-                  <Text style={styles.cardValue}>{booking.time || 'N/A'}</Text>
-                </View>
-                <View style={styles.cardItem}>
-                  <Text style={styles.cardLabel}>Destination:</Text>
-                  <Text style={styles.cardValue}>{booking.destination || 'N/A'}</Text>
-                </View>
+                
                 <TouchableOpacity 
-                  style={styles.cancelButton}
+                  style={[styles.actionButton, { backgroundColor: '#B88BE0' }]}
                   onPress={() => handleCancelBooking(booking._id, 'vehicle')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel Rental</Text>
+                  <Text style={styles.actionButtonText}>Cancel Rental</Text>
                 </TouchableOpacity>
               </View>
             ))
           )}
-        </View>
+        </Animated.View>
+        
+        <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
@@ -599,148 +732,223 @@ const UserProfilePage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F3EAFD',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  loadingText: {
+    color: '#5E35B1',
+    marginTop: 15,
+    fontSize: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
     paddingTop: 50,
-    backgroundColor: '#D1A7F7',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
+    backgroundColor: '#D6C4F0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EDE7F6',
+    elevation: 2,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 8,
+    borderRadius: 20,
   },
   backText: {
     fontSize: 16,
     marginLeft: 8,
-    color: 'white',
+    color: '#5E35B1',
     fontWeight: '500',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#5E35B1',
     marginLeft: 20,
   },
   scrollContainer: {
-    padding: 15,
+    padding: 16,
     paddingBottom: 30,
   },
   profileCard: {
     backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
     elevation: 2,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EDE7F6',
   },
   avatarContainer: {
-    backgroundColor: '#F1D9FF',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    backgroundColor: '#EDE7F6',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   welcomeText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    color: '#4527A0',
+    marginBottom: 16,
     textAlign: 'center',
   },
   infoContainer: {
     width: '100%',
+    marginTop: 8,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingBottom: 10,
+    marginBottom: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: '#EDE7F6',
   },
   infoText: {
-    fontSize: 15,
-    color: '#555',
-    marginLeft: 10,
+    fontSize: 16,
+    color: '#4527A0',
+    marginLeft: 12,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingLeft: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#D1A7F7',
-    marginBottom: 10,
-    marginLeft: 5,
+    color: '#5E35B1',
+    marginLeft: 12,
   },
-  card: {
+  bookingCard: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 15,
-    elevation: 2,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#EDE7F6',
   },
-  cardItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  cardLabel: {
-    fontSize: 15,
-    color: '#D1A7F7',
-    fontWeight: '500',
-  },
-  cardValue: {
-    fontSize: 15,
-    color: '#333',
-  },
-  noBookingsText: {
-    fontSize: 15,
-    color: '#888',
-    textAlign: 'center',
-    paddingVertical: 15,
-  },
-  cancelButton: {
-    backgroundColor: '#FF3B30',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
+  
+  loadingCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  emptyCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EDE7F6',
+    borderStyle: 'dashed',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EDE7F6',
+    paddingBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4527A0',
+    flexShrink: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  cardContent: {
+    marginBottom: 16,
+  },
+  cardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  cardLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
+  },
+  noBookingsText: {
+    fontSize: 14,
+    color: '#757575',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  actionButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    elevation: 2,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   errorContainer: {
     backgroundColor: '#FFEBEE',
-    padding: 15,
+    padding: 16,
     borderRadius: 8,
     marginBottom: 20,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EF9A9A',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   errorText: {
     color: '#D32F2F',
-    marginBottom: 10,
+    marginHorizontal: 10,
+    marginVertical: 5,
     textAlign: 'center',
+    flex: 1,
   },
   retryButton: {
-    backgroundColor: '#D1A7F7',
+    backgroundColor: '#5E35B1',
     padding: 10,
-    borderRadius: 5,
-    width: 100,
-    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    marginTop: 10,
   },
   retryButtonText: {
     color: 'white',

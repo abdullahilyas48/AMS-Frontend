@@ -8,17 +8,20 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
-  Pressable,
   TouchableWithoutFeedback,
+  ImageBackground,
 } from 'react-native';
 import axios from 'axios';
 import useAuth from '../hooks/useAuth';
 import TimeSelector from '../components/TimeSelector';
 import DateSelector from '../components/DateSelector';
 import PrimaryButton from '../components/PrimaryButton';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const BookLounge = () => {
   const { userData, token } = useAuth();
+  const navigation = useNavigation();
   const [lounges, setLounges] = useState([]);
   const [selectedLounge, setSelectedLounge] = useState('');
   const [bookingDate, setBookingDate] = useState(null);
@@ -29,7 +32,7 @@ const BookLounge = () => {
   useEffect(() => {
     const fetchLounges = async () => {
       try {
-        const response = await axios.get('http://192.168.1.7:7798/lounges', {
+        const response = await axios.get('http://192.168.100.18:7798/lounges', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLounges(response.data);
@@ -46,23 +49,23 @@ const BookLounge = () => {
       Alert.alert('Error', 'Please fill in all the fields');
       return;
     }
-  
+
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://192.168.1.7:7798/book-lounge',
+        'http://192.168.100.18:7798/book-lounge',
         {
-          userId: userData.id,
+          userId: userData._id,
           loungeId: selectedLounge,
           date: bookingDate.toISOString().split('T')[0],
           time: bookingTime,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       const { booking } = response.data;
       const loungeName = lounges.find((l) => l._id === booking.loungeId)?.name || 'Selected Lounge';
-  
+
       Alert.alert(
         'Success',
         `Lounge booked successfully!\n\n` +
@@ -74,7 +77,7 @@ const BookLounge = () => {
         `Booking ID: ${booking._id}\n` +
         `Created At: ${new Date(booking.createdAt).toLocaleString()}`
       );
-      
+
     } catch (error) {
       console.error('Booking failed:', error);
       Alert.alert('Error', 'Failed to book the lounge');
@@ -82,52 +85,51 @@ const BookLounge = () => {
       setLoading(false);
     }
   };
-  
 
   return (
-    <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.contentContainer}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/* Add ImageBackground for header */}
+      <ImageBackground
+        source={require('../assets/airplane.png')}
+        style={[styles.headerImage, { marginTop: -30 }]}
+        imageStyle={{ resizeMode: 'cover', borderBottomLeftRadius: 50, borderBottomRightRadius: 50 }}
+      >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={30} color="#fff" />
+        </TouchableOpacity>
+      </ImageBackground>
+
       <View style={styles.container}>
         <Text style={styles.title}>Book a Lounge</Text>
 
         <Text style={styles.inputHeading}>Choose a Lounge</Text>
-        <TouchableOpacity style={styles.inputField} onPress={() => setIsDropdownVisible(true)}>
-          <Text style={styles.inputText}>
-            {selectedLounge
-              ? lounges.find((l) => l._id === selectedLounge)?.name
-              : 'Select Lounge'}
-          </Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.inputField} onPress={() => setIsDropdownVisible(prev => !prev)}>
+  <Text style={styles.inputText}>
+    {selectedLounge
+      ? lounges.find((l) => l._id === selectedLounge)?.name
+      : 'Select Lounge'}
+  </Text>
+  <Ionicons name="chevron-down" size={20} color="grey" />
+</TouchableOpacity>
 
-        <Modal
-          transparent
-          animationType="fade"
-          visible={isDropdownVisible}
-          onRequestClose={() => setIsDropdownVisible(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setIsDropdownVisible(false)}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback>
-                <View style={styles.modalContainer}>
-                  <FlatList
-                    data={lounges}
-                    keyExtractor={(item) => item._id}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={styles.modalItem}
-                        onPress={() => {
-                          setSelectedLounge(item._id);
-                          setIsDropdownVisible(false);
-                        }}
-                      >
-                        <Text style={styles.modalText}>{item.name}</Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+
+{isDropdownVisible && (
+  <View style={styles.dropdown}>
+    {lounges.map((item) => (
+      <TouchableOpacity
+        key={item._id}
+        style={styles.modalItem}
+        onPress={() => {
+          setSelectedLounge(item._id);
+          setIsDropdownVisible(false);
+        }}
+      >
+        <Text style={styles.modalText}>{item.name}</Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+)}
+
 
         <DateSelector label="Booking Date" date={bookingDate} onDateChange={setBookingDate} />
         <TimeSelector label="Booking Time" time={bookingTime} onTimeChange={setBookingTime} />
@@ -142,31 +144,47 @@ const BookLounge = () => {
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: { flexGrow: 1, backgroundColor: '#E5D4ED' },
-  contentContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 40 },
-  container: {
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: '#E5D4ED',
+  },
+  headerImage: {
+    width: '107%',
+    height: 300,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     padding: 20,
-    backgroundColor: '#F4E8FF',
-    margin: 20,
-    borderRadius: 15,
-    elevation: 4,
-    width: '90%',
-
-  
+  },
+  backButton: {
+    marginTop: 60,
+    right: -10,
+  },
+  container: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    marginHorizontal: 10,
+    marginTop: -18,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+    height: 680,
   },
   title: {
     fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 30,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#4B0082',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   inputHeading: {
-    fontSize: 16,
+    fontSize: 14,  // Smaller font size
     fontWeight: 'bold',
-    marginBottom: 8,
-    marginTop: 10,
-    color: '#000',
+    marginTop: 18,
+    marginBottom: 12,
+    color: 'black', // Changed to black
   },
   inputField: {
     backgroundColor: '#E0D3F5',
@@ -174,7 +192,7 @@ const styles = StyleSheet.create({
     height: 45,
     paddingHorizontal: 12,
     justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 24,
     borderWidth: 1,
     borderColor: '#ccc',
     flexDirection: 'row',
@@ -182,29 +200,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   inputText: {
-    color: '#000',
+    color: '#000',  
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  dropdown: {
+    backgroundColor: '#E0D3F5',  // Keep background color as you wanted
+    borderRadius: 8,
+    marginBottom: 14,
+    maxHeight: 150, // You can adjust the height if necessary
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    shadowColor: '#000',  // Adding shadow for better depth
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  modalContainer: {
-    backgroundColor: '#E0D3F5',
-    borderRadius: 10,
-    width: '80%',
-    maxHeight: 250,
-    padding: 15,
-  },
+  
   modalItem: {
     paddingVertical: 10,
     borderBottomColor: '#eee',
     borderBottomWidth: 1,
+    paddingLeft: 15,  // Added padding for better text spacing
   },
+  
   modalText: {
-    color: '#000',
+    color: '#000',  // Set the text color to black for better visibility
+    fontSize: 16,  // Slightly increase font size for better readability
   },
+  
 });
 
 export default BookLounge;

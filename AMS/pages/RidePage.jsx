@@ -9,8 +9,10 @@ import {
   Alert,
   ScrollView,
   TouchableWithoutFeedback,
+  ImageBackground,
+  ActivityIndicator,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import DateSelector from '../components/DateSelector';
 import TimeSelector from '../components/TimeSelector';
 import InputField from '../components/InputField';
@@ -19,58 +21,38 @@ import PrimaryButton from '../components/PrimaryButton';
 import axios from 'axios';
 import useAuth from '../hooks/useAuth';
 
-const BookRentalService = () => {
+const BookRentalService = ({ navigation }) => {
   const { userData, isLoading } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [destination, setDestination] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 500]);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(null);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && userData?._id) {
-      fetchVehicles();
-    }
-  }, [isLoading, userData?._id, priceRange]);  
+    if (!isLoading && userData?._id) fetchVehicles();
+  }, [isLoading, userData?._id, priceRange]);
 
-  useEffect(() => {
-    console.log('UserData:', userData);
-  }, [userData]);
-  
   const fetchVehicles = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`http://192.168.1.7:7798/vehicles?maxPrice=${priceRange[1]}&minPrice=${priceRange[0]}`);
-      setVehicles(response.data);
-    } catch (error) {
+      const res = await axios.get(`http://192.168.1.7:7798/vehicles?maxPrice=${priceRange[1]}&minPrice=${priceRange[0]}`);
+      setVehicles(res.data);
+    } catch {
       Alert.alert('Error', 'Unable to fetch available vehicles.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-  
-  if (!userData?._id) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>User not authenticated. Please log in.</Text>
-      </View>
-    );
-  }
-  
-  
   const handleBooking = async () => {
     if (!selectedDate || !selectedTime || !destination || !selectedVehicle) {
       Alert.alert('Missing Info', 'Please complete all fields before booking.');
       return;
     }
-
     try {
       const payload = {
         userId: userData._id,
@@ -79,85 +61,69 @@ const BookRentalService = () => {
         time: selectedTime,
         destination,
       };
-
-      const response = await axios.post('http://192.168.1.7:7798/book-vehicles', payload);
-      const booking = response.data.booking;
-
-Alert.alert(
-  '✅ Booking Successful',
-  `Booking ID: ${booking._id}\nVehicle ID: ${booking.vehicleId}\nDate: ${booking.date}\nTime: ${booking.time}\nDestination: ${booking.destination}`
-);
-
-
-      fetchVehicles(); // refresh list after booking
+      const res = await axios.post('http://192.168.1.7:7798/book-vehicles', payload);
+      const booking = res.data.booking;
+      Alert.alert('✅ Booking Successful', `Booking ID: ${booking._id}\nVehicle ID: ${booking.vehicleId}\nDate: ${booking.date}\nTime: ${booking.time}\nDestination: ${booking.destination}`);
+      fetchVehicles();
     } catch (error) {
-      console.error('Booking failed:', error.response?.data || error.message);
       Alert.alert('Booking Failed', 'Please try again later.');
     }
   };
 
   const handleVehicleSelect = (vehicle) => {
     setSelectedVehicle(vehicle);
-    setDropdownVisible(false);
+    setDropdownVisible(false); // Hide dropdown after selection
   };
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ImageBackground
+        source={require('../assets/airplane.png')}
+        style={styles.headerImage}
+        imageStyle={{ resizeMode: 'cover', borderBottomLeftRadius: 50, borderBottomRightRadius: 50 }}
+      >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={30} color="#fff" />
+        </TouchableOpacity>
+      </ImageBackground>
+
       <View style={styles.container}>
         <Text style={styles.heading}>Book a Rental Vehicle</Text>
 
-        <DateSelector label="Select Date" date={selectedDate} onDateChange={setSelectedDate} />
+        <DateSelector label="Select Date" date={selectedDate} onDateChange={setSelectedDate} labelStyle={styles.label} />
         <TimeSelector label="Select Time" time={selectedTime} onTimeChange={setSelectedTime} />
-
-        <InputField
-          placeholder="Enter Destination"
-          iconName="location-arrow"
-          value={destination}
-          onChangeText={setDestination}
-          iconFamily="FontAwesome"
-        />
-
+        <InputField placeholder="Enter Destination" iconName="location-arrow" value={destination} onChangeText={setDestination} iconFamily="FontAwesome" />
         <PriceRangeSelector priceRange={priceRange} setPriceRange={setPriceRange} />
 
         <Text style={styles.label}>Select a Vehicle</Text>
-        <TouchableOpacity style={styles.dropdown} onPress={() => setDropdownVisible(true)}>
-          <Text style={styles.dropdownText}>
-            {selectedVehicle
-              ? `${selectedVehicle.name} (Rs. ${selectedVehicle.price})`
-              : 'Tap to select a vehicle'}
-          </Text>
-          <FontAwesome name="car" size={20} color="#888" />
+        <TouchableOpacity style={styles.dropdown} onPress={() => setDropdownVisible(!dropdownVisible)}>
+          <Text style={[styles.inputText, styles.blackText]}>{selectedVehicle ? `${selectedVehicle.name} (Rs. ${selectedVehicle.price})` : 'Tap to select a vehicle'}</Text>
+          <FontAwesome name="car" size={20} color="#000" />
         </TouchableOpacity>
 
-        <Modal transparent visible={dropdownVisible} animationType="fade" onRequestClose={() => setDropdownVisible(false)}>
-          <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback>
-                <View style={styles.modalContainer}>
-                  <FlatList
-                    data={vehicles}
-                    keyExtractor={(item) => item._id}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity style={styles.modalItem} onPress={() => handleVehicleSelect(item)}>
-                        <Text style={styles.modalText}>{item.name} - Rs. {item.price}</Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+        {/* Inline Dropdown List */}
+        {dropdownVisible && !loading && (
+          <View style={styles.dropdownList}>
+            <FlatList
+              data={vehicles}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.modalItem} onPress={() => handleVehicleSelect(item)}>
+                  <Text style={styles.modalText}>{item.name} - Rs. {item.price}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
 
-        <PrimaryButton label="Book Now" onPress={handleBooking} />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4B0082" />
+            <Text style={[styles.inputText, styles.blackText]}>Loading vehicles...</Text>
+          </View>
+        ) : null}
+
+        <PrimaryButton label="Book Now" onPress={handleBooking} style={{ marginTop: 40 }} />
       </View>
     </ScrollView>
   );
@@ -165,58 +131,74 @@ Alert.alert(
 
 const styles = StyleSheet.create({
   scrollContainer: {
+    width: '100%',
     flexGrow: 1,
     backgroundColor: '#E5D4ED',
+    paddingVertical: 30,
     alignItems: 'center',
-    paddingBottom: 40,
+  },
+  headerImage: {
+    width: '107%',
+    height: 200,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    padding: 20,
+    marginTop: -30,  // Move the image upwards
+  },
+  backButton: {
+    marginTop: 40,
+    right: -15,
   },
   container: {
-    backgroundColor: '#F4E8FF',
+    width: '95%',
+    marginTop: -18,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
-    borderRadius: 15,
-    width: '90%',
-    elevation: 4,
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+    height: 850,
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#4B0082',
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#000',
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
-    marginTop: 15,
-    marginBottom: 10,
+    marginTop: 20,
+    marginBottom: 6,
+  },
+  blackText: {
+    color: '#333',
+    fontSize: 15,
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#E9D5FF',
-    padding: 12,
+    padding: 14,
     borderRadius: 10,
-    borderColor: '#d1c1e0',
+    backgroundColor: '#E0D3F5',
+    borderColor: '#C7B8EC',
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 10, // Space for the dropdown
   },
-  dropdownText: {
-    fontSize: 16,
-    color: '#888',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContainer: {
-    backgroundColor: '#D8BFE8',
-    width: 300,
-    borderRadius: 5,
-    paddingVertical: 10,
+  dropdownList: {
+    width: '100%',
+    backgroundColor: '#E0D3F5',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#C7B8EC',
+    marginTop: 5,
   },
   modalItem: {
     padding: 15,
@@ -228,13 +210,15 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  loadingText: {
-    fontSize: 18,
-    color: '#888',
+
+  // Add a common style for input text
+  inputText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#333',
   },
 });
 
